@@ -8,40 +8,50 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import { getSessionQueryOptions } from "#/lib/auth/queries";
+import { getTheme } from "#/lib/theme";
+
 import appCss from "../styles.css?url";
 
 interface MyRouterContext {
   queryClient: QueryClient;
 }
 
-const RootDocument = ({ children }: { children: React.ReactNode }) => (
-  <html lang="en">
-    <head>
-      <HeadContent />
-    </head>
-    <body>
-      {children}
-      <TanStackDevtools
-        config={{
-          position: "bottom-right",
-        }}
-        plugins={[
-          {
-            name: "Tanstack Router",
-            render: <TanStackRouterDevtoolsPanel />,
-          },
-          {
-            name: "TanStack Query",
-            render: <ReactQueryDevtoolsPanel />,
-          },
-        ]}
-      />
-      <Scripts />
-    </body>
-  </html>
-);
+const RootDocument = ({ children }: { children: React.ReactNode }) => {
+  const { theme } = Route.useRouteContext();
+  return (
+    <html className={theme} lang="en">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <TanStackDevtools
+          config={{
+            position: "bottom-right",
+          }}
+          plugins={[
+            {
+              name: "Tanstack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+            {
+              name: "TanStack Query",
+              render: <ReactQueryDevtoolsPanel />,
+            },
+          ]}
+        />
+        <Scripts />
+      </body>
+    </html>
+  );
+};
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+  beforeLoad: async ({ context: { queryClient } }) => {
+    const session = await queryClient.ensureQueryData(getSessionQueryOptions);
+    return { session, theme: await getTheme() };
+  },
   head: () => ({
     links: [
       {

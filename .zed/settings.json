@@ -14,13 +14,9 @@
     "oxfmt": {
       "initialization_options": {
         "settings": {
-          "configPath": null,
-          "flags": {},
-          "fmt.configPath": null,
           "fmt.experimental": true,
           "run": "onSave",
-          "typeAware": false,
-          "unusedDisableDirectives": false
+          "typeAware": false
         }
       }
     },
@@ -37,6 +33,17 @@
     }
   },
   "languages": {
+    "CSS": {
+      "code_actions_on_format": {
+        "source.fixAll.oxc": true,
+        "source.organizeImports.oxc": true
+      },
+      "formatter": {
+        "language_server": {
+          "name": "oxfmt"
+        }
+      }
+    },
     "JavaScript": {
       "code_actions_on_format": {
         "source.fixAll.biome": true,
@@ -76,10 +83,19 @@
         }
       }
     },
+    "JSONC": {
+      "code_actions_on_format": {
+        "source.fixAll.oxc": true,
+        "source.organizeImports.oxc": true
+      },
+      "formatter": {
+        "language_server": {
+          "name": "oxfmt"
+        }
+      }
+    },
     "JSON": {
       "code_actions_on_format": {
-        "source.fixAll.biome": true,
-        "source.organizeImports.biome": true,
         "source.fixAll.oxc": true,
         "source.organizeImports.oxc": true
       },

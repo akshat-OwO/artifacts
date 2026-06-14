@@ -19,25 +19,32 @@ type BreakpointQuery =
   | `max-${Breakpoint}`
   | `${Breakpoint}:max-${Breakpoint}`;
 
-function resolveMin(value: Breakpoint | number): string {
+export interface MediaQueryInput {
+  min?: Breakpoint | number;
+  max?: Breakpoint | number;
+  /** Touch-like input (finger). Use "fine" for mouse/trackpad. */
+  pointer?: "coarse" | "fine";
+}
+
+type MediaQuery = BreakpointQuery | MediaQueryInput | string;
+
+const resolveMin = (value: Breakpoint | number): string => {
   const px = typeof value === "number" ? value : BREAKPOINTS[value];
   return `(min-width: ${px}px)`;
-}
+};
 
-function resolveMax(value: Breakpoint | number): string {
+const resolveMax = (value: Breakpoint | number): string => {
   const px = typeof value === "number" ? value : BREAKPOINTS[value];
   return `(max-width: ${px - 1}px)`;
-}
+};
 
-function parseQuery(
-  query: BreakpointQuery | MediaQueryInput | (string & {})
-): string {
+const parseQuery = (query: MediaQuery): string => {
   if (typeof query !== "string") {
     const parts: string[] = [];
-    if (query.min != null) {
+    if (query.min !== undefined) {
       parts.push(resolveMin(query.min));
     }
-    if (query.max != null) {
+    if (query.max !== undefined) {
       parts.push(resolveMax(query.max));
     }
     if (query.pointer === "coarse") {
@@ -69,32 +76,24 @@ function parseQuery(
   }
 
   return parts.length > 0 ? parts.join(" and ") : query;
-}
+};
 
-function getServerSnapshot(): boolean {
-  return false;
-}
+const getServerSnapshot = (): boolean => false;
 
-export interface MediaQueryInput {
-  min?: Breakpoint | number;
-  max?: Breakpoint | number;
-  /** Touch-like input (finger). Use "fine" for mouse/trackpad. */
-  pointer?: "coarse" | "fine";
-}
+const noopUnsubscribe = (): void => undefined;
 
-export function useMediaQuery(
-  query: BreakpointQuery | MediaQueryInput | (string & {})
-): boolean {
+export const useMediaQuery = (query: MediaQuery): boolean => {
   const mediaQuery = parseQuery(query);
 
   const subscribe = useCallback(
-    (callback: () => void) => {
+    // oxlint-disable-next-line promise/prefer-await-to-callbacks -- useSyncExternalStore requires callback-based subscribe
+    (onStoreChange: () => void) => {
       if (typeof window === "undefined") {
-        return () => {};
+        return noopUnsubscribe;
       }
       const mql = window.matchMedia(mediaQuery);
-      mql.addEventListener("change", callback);
-      return () => mql.removeEventListener("change", callback);
+      mql.addEventListener("change", onStoreChange);
+      return () => mql.removeEventListener("change", onStoreChange);
     },
     [mediaQuery]
   );
@@ -107,8 +106,6 @@ export function useMediaQuery(
   }, [mediaQuery]);
 
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-}
+};
 
-export function useIsMobile(): boolean {
-  return useMediaQuery("max-md");
-}
+export const useIsMobile = (): boolean => useMediaQuery("max-md");
