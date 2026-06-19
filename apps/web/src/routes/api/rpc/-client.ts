@@ -11,7 +11,7 @@ export class ApiClient extends Context.Service<ApiClient>()(
   {
     make: Effect.gen(function* make() {
       const httpApiClient = yield* HttpApiClient.make(Api, {
-        baseUrl: Bun.env.BASE_URL,
+        baseUrl: window.location.origin,
       });
       return httpApiClient;
     }),

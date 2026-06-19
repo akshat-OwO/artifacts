@@ -16,6 +16,9 @@
     "db:migrate": "bunx --bun drizzle-kit migrate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1071.0",
+    "@aws-sdk/s3-presigned-post": "^3.1071.0",
+    "@aws-sdk/s3-request-presigner": "^3.1071.0",
     "@base-ui/react": "^1.5.0",
     "@better-auth/drizzle-adapter": "^1.6.18",
     "@effect/sql-pg": "^4.0.0-beta.83",
@@ -37,11 +40,13 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^1.0.0-beta.22",
     "effect": "^4.0.0-beta.83",
+    "files-sdk": "^1.9.0",
     "lucide-react": "^1.18.0",
     "pg": "^8.21.0",
     "react": "^19.2.0",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.0",
+    "react-dropzone": "^15.0.0",
     "shadcn": "^4.11.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.1.18",

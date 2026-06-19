@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import { AnchoredToastProvider, ToastProvider } from "#/components/ui/toast";
 import { getSessionQueryOptions } from "#/lib/auth/queries";
 import { getTheme } from "#/lib/theme";
 
@@ -24,8 +25,12 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
       <head>
         <HeadContent />
       </head>
-      <body>
-        {children}
+      <body className="relative">
+        <div className="isolate relative flex min-h-svh flex-col">
+          <ToastProvider>
+            <AnchoredToastProvider>{children}</AnchoredToastProvider>
+          </ToastProvider>
+        </div>
         <TanStackDevtools
           config={{
             position: "bottom-right",
