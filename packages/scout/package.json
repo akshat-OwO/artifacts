@@ -1,0 +1,23 @@
+{
+  "name": "@artifacts/scout",
+  "private": true,
+  "type": "module",
+  "module": "index.ts",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "start": "bun --bun src/index.ts",
+    "dev": "bun --watch --bun src/index.ts",
+    "postinstall": "bun x playwright install --with-deps"
+  },
+  "dependencies": {
+    "@effect/platform-bun": "^4.0.0-beta.85",
+    "effect": "^4.0.0-beta.85",
+    "playwright": "^1.61.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
