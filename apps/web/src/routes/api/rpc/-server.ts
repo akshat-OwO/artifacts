@@ -3,6 +3,7 @@ import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { HttpApiBuilder, HttpApiScalar } from "effect/unstable/httpapi";
 
 import { Api } from "./-api";
+import { ArtifactsApiHandler } from "./-handlers/artifacts";
 import { SystemApiHandler } from "./-handlers/system";
 import { UploadApiHandler } from "./-handlers/upload";
 import { AuthLive } from "./-middlewares/auth.server";
@@ -12,6 +13,7 @@ const ApiLive = HttpApiBuilder.layer(Api, {
 }).pipe(
   Layer.provide(SystemApiHandler),
   Layer.provide(UploadApiHandler),
+  Layer.provide(ArtifactsApiHandler),
   Layer.provide(AuthLive)
 );
 
