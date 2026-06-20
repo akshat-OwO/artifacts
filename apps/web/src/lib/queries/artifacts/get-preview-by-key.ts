@@ -24,4 +24,5 @@ export const getArtifactPreviewByKeyOptions = (
       return await Effect.runPromise(program);
     },
     queryKey: ["artifacts", artifactId, artifactKey],
+    staleTime: Infinity,
   });

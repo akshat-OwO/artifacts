@@ -32,4 +32,10 @@ export class ArtifactsApi extends HttpApiGroup.make("artifacts")
       }
     )
   )
+  .add(
+    HttpApiEndpoint.get("getArtifacts", "/artifacts", {
+      error: [EffectDrizzleQueryError, SqlError],
+      success: Schema.Array(GetArtifactById),
+    })
+  )
   .middleware(AuthMiddleware) {}

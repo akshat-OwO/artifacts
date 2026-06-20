@@ -5,6 +5,7 @@ import { SqlError } from "effect/unstable/sql/SqlError";
 
 import { FileTooLargeError } from "#/lib/errors/upload/file-size";
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
+import { InvalidFileTypeError } from "#/lib/errors/upload/invalid-file";
 
 import { AuthMiddleware } from "../-middlewares/auth";
 
@@ -13,6 +14,7 @@ export class UploadApi extends HttpApiGroup.make("upload")
     HttpApiEndpoint.post("uploadArtifacts", "/upload-artifacts", {
       error: [
         FileTooLargeError,
+        InvalidFileTypeError,
         FileUploadError,
         EffectDrizzleQueryError,
         SqlError,

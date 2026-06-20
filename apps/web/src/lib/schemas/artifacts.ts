@@ -6,5 +6,6 @@ export const GetArtifactById = Schema.Struct({
   createdAt: Schema.Date,
   id: Schema.String.check(Schema.isUUID()),
   name: Schema.String,
+  previewKey: Schema.String,
   updatedAt: Schema.Date,
 });

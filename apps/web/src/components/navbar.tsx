@@ -1,9 +1,9 @@
 import { CogIcon, UserCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useMatch, useRouteContext } from "@tanstack/react-router";
+import { Link, useMatch, useRouteContext } from "@tanstack/react-router";
 
 import { Button } from "#/components/ui/button";
-import { Group, GroupSeparator } from "#/components/ui/group";
+import { Group, GroupSeparator, GroupText } from "#/components/ui/group";
 import { signIn } from "#/lib/auth/client";
 
 import { ArtifactNavbar } from "./artifacts/artifact-navbar";
@@ -34,8 +34,12 @@ export const Navbar = () => {
         <Group>
           {session && (
             <>
-              <Button size="icon-xl" variant="secondary" aria-label="Profile">
-                <HugeiconsIcon icon={UserCircleIcon} />
+              <Button
+                size="xl"
+                variant="secondary"
+                render={<Link to="/artifacts" />}
+              >
+                Artifacts
               </Button>
               <GroupSeparator />
               <Button size="icon-xl" variant="secondary" aria-label="Settings">

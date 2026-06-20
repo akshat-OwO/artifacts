@@ -35,7 +35,7 @@ export const ArtifactFrame = ({
       allow=""
       className="rounded-md w-full h-full"
       referrerPolicy="no-referrer"
-      sandbox=""
+      sandbox="allow-scripts"
       src={url}
       title={title}
     />

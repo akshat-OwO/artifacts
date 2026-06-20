@@ -56,7 +56,7 @@
   --animate-toast-error-even: toast-error-even 0.28s
     cubic-bezier(0.5, 1, 0.89, 1);
   --animate-caret-blink: 1s ease-out infinite caret-blink;
-  --font-mono: monospace;
+  --font-mono: "Geist Mono Variable", monospace;
   --color-code-highlight: var(--code-highlight);
   --code-foreground: var(--code-foreground);
   --color-code: var(--code);

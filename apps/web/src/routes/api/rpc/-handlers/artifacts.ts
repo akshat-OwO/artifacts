@@ -29,6 +29,7 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
               createdAt: artifact.createdAt,
               id: artifact.id,
               name: artifact.name,
+              previewKey: artifact.previewKey,
               updatedAt: artifact.updatedAt,
             })
             .from(artifact)
@@ -72,5 +73,18 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
 
           return previewUrl;
         }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
+      )
+      .handle("getArtifacts", () =>
+        Effect.gen(function* handler() {
+          const db = yield* PgDrizzle.makeWithDefaults();
+          const user = yield* AuthUser;
+
+          const artifactsRow = yield* db
+            .select()
+            .from(artifact)
+            .where(eq(artifact.userId, user.id));
+
+          return artifactsRow.map((a) => ({ author: user.id, ...a }));
+        }).pipe(Effect.provide(PgClientLive))
       )
 );

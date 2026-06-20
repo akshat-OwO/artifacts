@@ -23,6 +23,9 @@ export const artifact = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     id: uuid("id").defaultRandom().primaryKey(),
     name: text("name").default(randomArtifactName).notNull(),
+    previewKey: text("preview_key")
+      .default("preview/preview-fallback.png")
+      .notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => new Date())

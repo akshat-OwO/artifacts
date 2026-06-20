@@ -25,10 +25,8 @@ export const uploadArtifactsMutations = () =>
         Effect.catchTags({
           FileTooLargeError: () =>
             Effect.fail("File should be smaller than 10mb."),
-          FileUploadError: (error) => {
-            console.log("FileUploadError", error);
-            return Effect.fail("File Upload Error! Please try again.");
-          },
+          FileUploadError: () =>
+            Effect.fail("File Upload Error! Please try again."),
           Unauthorized: () => Effect.fail("Unauthorized"),
         }),
         Effect.catchTag(
@@ -38,11 +36,7 @@ export const uploadArtifactsMutations = () =>
             "SchemaError",
             "SqlError",
           ],
-          // oxlint-disable-next-line prefer-await-to-callbacks
-          (error) => {
-            console.log("Upload Artifacts Error", error);
-            return Effect.fail("Something went wrong. Please try again.");
-          }
+          () => Effect.fail("Something went wrong. Please try again.")
         ),
         Effect.provide(ApiClient.layer)
       );

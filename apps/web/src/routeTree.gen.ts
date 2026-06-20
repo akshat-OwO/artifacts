@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProtectedArtifactsIndexRouteImport } from './routes/_protected/artifacts/index'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ProtectedAArtifactIdRouteImport } from './routes/_protected/a/$artifactId'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedArtifactsIndexRoute = ProtectedArtifactsIndexRouteImport.update({
+  id: '/artifacts/',
+  path: '/artifacts/',
+  getParentRoute: () => ProtectedRoute,
 } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
@@ -45,12 +51,14 @@ export interface FileRoutesByFullPath {
   '/a/$artifactId': typeof ProtectedAArtifactIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/artifacts/': typeof ProtectedArtifactsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/a/$artifactId': typeof ProtectedAArtifactIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/artifacts': typeof ProtectedArtifactsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +67,18 @@ export interface FileRoutesById {
   '/_protected/a/$artifactId': typeof ProtectedAArtifactIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/_protected/artifacts/': typeof ProtectedArtifactsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/a/$artifactId' | '/api/auth/$' | '/api/rpc/$'
+  fullPaths:
+    | '/'
+    | '/a/$artifactId'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/artifacts/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/a/$artifactId' | '/api/auth/$' | '/api/rpc/$'
+  to: '/' | '/a/$artifactId' | '/api/auth/$' | '/api/rpc/$' | '/artifacts'
   id:
     | '__root__'
     | '/'
@@ -72,6 +86,7 @@ export interface FileRouteTypes {
     | '/_protected/a/$artifactId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/_protected/artifacts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -96,6 +111,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_protected/artifacts/': {
+      id: '/_protected/artifacts/'
+      path: '/artifacts'
+      fullPath: '/artifacts/'
+      preLoaderRoute: typeof ProtectedArtifactsIndexRouteImport
+      parentRoute: typeof ProtectedRoute
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -123,10 +145,12 @@ declare module '@tanstack/react-router' {
 
 interface ProtectedRouteChildren {
   ProtectedAArtifactIdRoute: typeof ProtectedAArtifactIdRoute
+  ProtectedArtifactsIndexRoute: typeof ProtectedArtifactsIndexRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedAArtifactIdRoute: ProtectedAArtifactIdRoute,
+  ProtectedArtifactsIndexRoute: ProtectedArtifactsIndexRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(

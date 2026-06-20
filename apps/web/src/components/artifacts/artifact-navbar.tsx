@@ -30,7 +30,7 @@ export const ArtifactNavbar = ({ artifactId }: ArtifactNavbarProps) => {
   const timestampLabel = wasUpdated ? "Updated" : "Created";
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       <p className="font-semibold">
         {data.name}{" "}
         <span className="inline-block text-muted-foreground">
