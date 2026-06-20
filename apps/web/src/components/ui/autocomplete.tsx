@@ -63,13 +63,13 @@ export const AutocompleteInput = ({
 
   return (
     <AutocompletePrimitive.InputGroup
-      className="relative not-has-[>*.w-full]:w-fit w-full text-foreground has-disabled:opacity-64"
+      className="text-foreground relative w-full not-has-[>*.w-full]:w-fit has-disabled:opacity-64"
       data-slot="autocomplete-input-group"
     >
       {startAddon && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 start-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:-mx-0.5"
+          className="pointer-events-none absolute inset-y-0 start-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg]:-mx-0.5 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4"
           data-slot="autocomplete-start-addon"
         >
           {startAddon}
@@ -151,7 +151,7 @@ export const AutocompletePopup = ({
         )}
       >
         <AutocompletePrimitive.Popup
-          className="flex max-h-[min(var(--available-height),23rem)] flex-1 flex-col text-foreground"
+          className="text-foreground flex max-h-[min(var(--available-height),23rem)] flex-1 flex-col"
           data-slot="autocomplete-popup"
           {...props}
         >

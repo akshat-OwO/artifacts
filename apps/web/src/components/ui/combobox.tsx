@@ -102,13 +102,13 @@ export const ComboboxInput = ({
 
   return (
     <ComboboxPrimitive.InputGroup
-      className="relative not-has-[>*.w-full]:w-fit w-full text-foreground has-disabled:opacity-64"
+      className="text-foreground relative w-full not-has-[>*.w-full]:w-fit has-disabled:opacity-64"
       data-slot="combobox-input-group"
     >
       {startAddon && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 start-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:-mx-0.5"
+          className="pointer-events-none absolute inset-y-0 start-px z-10 flex items-center ps-[calc(--spacing(3)-1px)] opacity-80 has-[+[data-size=sm]]:ps-[calc(--spacing(2.5)-1px)] [&_svg]:-mx-0.5 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4"
           data-slot="combobox-start-addon"
         >
           {startAddon}
@@ -200,7 +200,7 @@ export const ComboboxPopup = ({
           )}
         >
           <ComboboxPrimitive.Popup
-            className="flex max-h-[min(var(--available-height),23rem)] flex-1 flex-col text-foreground"
+            className="text-foreground flex max-h-[min(var(--available-height),23rem)] flex-1 flex-col"
             data-slot="combobox-popup"
             {...props}
           >
@@ -371,7 +371,7 @@ export const ComboboxChips = ({
       {startAddon && (
         <div
           aria-hidden="true"
-          className="flex shrink-0 items-center ps-2 opacity-80 has-[~[data-size=sm]]:has-[+[data-slot=combobox-chip]]:pe-1.5 has-[~[data-size=sm]]:ps-1.5 has-[+[data-slot=combobox-chip]]:pe-2 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:-ms-0.5 [&_svg]:-me-1.5"
+          className="flex shrink-0 items-center ps-2 opacity-80 has-[+[data-slot=combobox-chip]]:pe-2 has-[~[data-size=sm]]:ps-1.5 has-[~[data-size=sm]]:has-[+[data-slot=combobox-chip]]:pe-1.5 [&_svg]:pointer-events-none [&_svg]:-ms-0.5 [&_svg]:-me-1.5 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4"
           data-slot="combobox-start-addon"
         >
           {startAddon}
@@ -403,7 +403,7 @@ export const ComboboxChip = ({
   removeProps?: ComboboxPrimitive.ChipRemove.Props;
 }): React.ReactElement => (
   <ComboboxPrimitive.Chip
-    className="flex items-center rounded-[calc(var(--radius-md)-1px)] bg-accent ps-2 font-medium text-accent-foreground text-sm outline-none sm:text-xs/(--text-xs--line-height) [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-3.5"
+    className="bg-accent text-accent-foreground flex items-center rounded-[calc(var(--radius-md)-1px)] ps-2 text-sm font-medium outline-none sm:text-xs/(--text-xs--line-height) [&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-3.5"
     data-slot="combobox-chip"
     {...props}
   >

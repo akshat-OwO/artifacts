@@ -3,9 +3,9 @@ import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 import { Navbar } from "#/components/navbar";
 
 const RouteComponent = () => (
-  <div className="flex flex-col h-screen">
+  <div className="flex h-screen flex-col">
     <Navbar />
-    <div className="mx-2 md:mx-6 my-4 flex-1 border border-primary rounded-md">
+    <div className="border-primary mx-2 my-4 flex-1 rounded-md border md:mx-6">
       <Outlet />
     </div>
   </div>

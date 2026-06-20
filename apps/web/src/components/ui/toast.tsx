@@ -48,8 +48,8 @@ const getSwipeDirection = (position: ToastPosition): SwipeDirection[] => {
 };
 
 const upsertReplayClassName = (toast: {
-  type?: string;
-  updateKey?: number;
+  type?: string | undefined;
+  updateKey?: number | undefined;
 }): string | undefined => {
   const k = toast.updateKey ?? 0;
   if (k <= 0) {
@@ -144,14 +144,14 @@ const Toasts = ({
               swipeDirection={swipeDirection}
               toast={toast}
             >
-              <Toast.Content className="pointer-events-auto flex items-center justify-between gap-1.5 overflow-hidden px-3.5 py-3 text-sm transition-opacity duration-250 data-behind:not-data-expanded:pointer-events-none data-behind:opacity-0 data-expanded:opacity-100">
+              <Toast.Content className="pointer-events-auto flex items-center justify-between gap-1.5 overflow-hidden px-3.5 py-3 text-sm transition-opacity duration-250 data-behind:opacity-0 data-behind:not-data-expanded:pointer-events-none data-expanded:opacity-100">
                 <div className="flex gap-2">
                   {Icon && (
                     <div
-                      className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
+                      className="[&_svg]:pointer-events-none [&_svg]:shrink-0 [&>svg]:h-lh [&>svg]:w-4"
                       data-slot="toast-icon"
                     >
-                      <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
+                      <Icon className="in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:animate-spin in-data-[type=loading]:opacity-80" />
                     </div>
                   )}
 
@@ -237,10 +237,10 @@ const AnchoredToasts = ({
                     <div className="flex gap-2">
                       {Icon && (
                         <div
-                          className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
+                          className="[&_svg]:pointer-events-none [&_svg]:shrink-0 [&>svg]:h-lh [&>svg]:w-4"
                           data-slot="toast-icon"
                         >
-                          <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
+                          <Icon className="in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:animate-spin in-data-[type=loading]:opacity-80" />
                         </div>
                       )}
 
@@ -301,7 +301,10 @@ export const ToastProvider = ({
 }: ToastProviderProps): React.ReactElement => (
   <Toast.Provider toastManager={toastManager} {...props}>
     {children}
-    <Toasts portalProps={portalProps} position={position} />
+    <Toasts
+      position={position}
+      {...(portalProps === undefined ? {} : { portalProps })}
+    />
   </Toast.Provider>
 );
 
@@ -316,7 +319,7 @@ export const AnchoredToastProvider = ({
 }: AnchoredToastProviderProps): React.ReactElement => (
   <Toast.Provider toastManager={anchoredToastManager} {...props}>
     {children}
-    <AnchoredToasts portalProps={portalProps} />
+    <AnchoredToasts {...(portalProps === undefined ? {} : { portalProps })} />
   </Toast.Provider>
 );
 

@@ -12,12 +12,12 @@ export const ArtifactPreviewError = ({ error }: ArtifactPreviewErrorProps) => {
       : "Something went wrong! Please try again.";
 
   return (
-    <div className="h-full flex flex-col items-center justify-center">
+    <div className="flex h-full flex-col items-center justify-center">
       <HugeiconsIcon
         icon={typeof error === "string" ? Sad01Icon : PlugSocketIcon}
         className="text-destructive size-20"
       />
-      <p className="mt-4 text-lg text-center stroke-destructive-foreground">
+      <p className="stroke-destructive-foreground mt-4 text-center text-lg">
         {message}
       </p>
     </div>

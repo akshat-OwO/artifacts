@@ -26,7 +26,7 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
         <HeadContent />
       </head>
       <body className="relative">
-        <div className="isolate relative flex min-h-svh flex-col">
+        <div className="relative isolate flex min-h-svh flex-col">
           <ToastProvider>
             <AnchoredToastProvider>{children}</AnchoredToastProvider>
           </ToastProvider>

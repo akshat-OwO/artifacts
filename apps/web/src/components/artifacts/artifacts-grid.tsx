@@ -12,16 +12,16 @@ export const ArtifactsGrid = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-10 p-4">
+    <div className="grid grid-cols-1 gap-10 p-4 md:grid-cols-3 lg:grid-cols-4">
       {data.map((artifact) => (
         <Link
           key={artifact.id}
           to="/a/$artifactId"
           params={{ artifactId: artifact.id }}
-          className="rounded-md border border-accent bg-accent relative group"
+          className="border-accent bg-accent group relative rounded-md border"
         >
-          <div className="absolute bottom-0 left-0 w-full flex flex-col gap-1 p-4">
-            <p className="font-semibold text-primary-foreground">
+          <div className="absolute bottom-0 left-0 flex w-full flex-col gap-1 p-4">
+            <p className="text-primary-foreground font-semibold">
               {artifact.name}
             </p>
             <span className="text-muted-foreground text-xs">
@@ -33,11 +33,11 @@ export const ArtifactsGrid = () => {
               )}
             </span>
           </div>
-          <div className="transition-all absolute bottom-0 w-full h-1/4 group-hover:h-1/2 bg-linear-to-b from-transparent to-background/30" />
+          <div className="to-background/30 absolute bottom-0 h-1/4 w-full bg-linear-to-b from-transparent transition-all group-hover:h-1/2" />
           <img
             src={artifact.previewKey}
             alt={`${artifact.name} preview`}
-            className="rounded-md aspect-video"
+            className="aspect-video rounded-md"
           />
         </Link>
       ))}

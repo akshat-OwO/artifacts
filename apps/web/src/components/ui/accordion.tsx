@@ -52,7 +52,7 @@ export const AccordionPanel = ({
   ...props
 }: AccordionPrimitive.Panel.Props): React.ReactElement => (
   <AccordionPrimitive.Panel
-    className="h-(--accordion-panel-height) overflow-hidden text-muted-foreground text-sm transition-[height] duration-200 ease-in-out data-ending-style:h-0 data-starting-style:h-0"
+    className="text-muted-foreground h-(--accordion-panel-height) overflow-hidden text-sm transition-[height] duration-200 ease-in-out data-ending-style:h-0 data-starting-style:h-0"
     data-slot="accordion-panel"
     {...props}
   >

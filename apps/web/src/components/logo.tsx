@@ -10,9 +10,9 @@ export const Logo = ({ variant = "default" }: LogoProps) =>
     Match.when("default", () => (
       <Link
         to="/"
-        className="py-1 px-4 border rounded-md border-primary focus:border-accent border-dashed"
+        className="border-primary focus:border-accent rounded-md border border-dashed px-4 py-1"
       >
-        <span className="text-2xl font-bold text-primary">A</span>
+        <span className="text-primary text-2xl font-bold">A</span>
         <span className="sr-only">Artifacts</span>
       </Link>
     )),
@@ -22,8 +22,8 @@ export const Logo = ({ variant = "default" }: LogoProps) =>
       </Link>
     )),
     Match.when("loader", () => (
-      <div className="py-1 px-4 border rounded border-primary border-dashed animate-pulse">
-        <span className="text-2xl font-bold text-primary">A</span>
+      <div className="border-primary animate-pulse rounded border border-dashed px-4 py-1">
+        <span className="text-primary text-2xl font-bold">A</span>
         <span className="sr-only">Loading...</span>
       </div>
     )),

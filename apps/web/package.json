@@ -10,6 +10,7 @@
     "start": "bun run server.ts",
     "generate-routes": "tsr generate",
     "build": "bun --bun vite build",
+    "check-types": "tsc --noEmit",
     "preview": "bun --bun vite preview",
     "test": "vitest run",
     "db:generate": "bunx --bun drizzle-kit generate",

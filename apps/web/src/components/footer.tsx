@@ -7,7 +7,7 @@ import { buttonVariants } from "./ui/button";
 import { Group, GroupSeparator } from "./ui/group";
 
 export const Footer = () => (
-  <footer className="flex justify-end items-center pb-4 px-2 md:px-6 py-2">
+  <footer className="flex items-center justify-end px-2 py-2 pb-4 md:px-6">
     <Group>
       <a
         aria-label="Github"

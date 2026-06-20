@@ -15,8 +15,8 @@ export const ArtifactNavbar = ({ artifactId }: ArtifactNavbarProps) => {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-1">
-        <Skeleton className="w-36 h-4" />
-        <Skeleton className="w-24 h-4" />
+        <Skeleton className="h-4 w-36" />
+        <Skeleton className="h-4 w-24" />
       </div>
     );
   }
@@ -33,11 +33,11 @@ export const ArtifactNavbar = ({ artifactId }: ArtifactNavbarProps) => {
     <div className="flex flex-col">
       <p className="font-semibold">
         {data.name}{" "}
-        <span className="inline-block text-muted-foreground">
+        <span className="text-muted-foreground inline-block">
           by {data.author}
         </span>
       </p>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         {timestampLabel}{" "}
         {formatDistanceToNow(latestTimestamp, { addSuffix: true })}
       </p>

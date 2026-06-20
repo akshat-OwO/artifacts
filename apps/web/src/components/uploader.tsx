@@ -23,11 +23,11 @@ export const Uploader = () => {
   return (
     <div
       {...getRootProps()}
-      className="mx-2 md:mx-6 my-4 p-2 flex-1 flex flex-col items-center justify-center border border-primary border-dashed rounded-md"
+      className="border-primary mx-2 my-4 flex flex-1 flex-col items-center justify-center rounded-md border border-dashed p-2 md:mx-6"
     >
       <input {...getInputProps()} className="hidden" />
-      <div className="flex flex-col gap-4 items-center justify-center">
-        <div className="rounded-full p-4 bg-secondary">
+      <div className="flex flex-col items-center justify-center gap-4">
+        <div className="bg-secondary rounded-full p-4">
           <HugeiconsIcon
             icon={uploadedFile ? FileCode : Plus}
             className="size-16"
@@ -36,11 +36,11 @@ export const Uploader = () => {
         <div className="space-y-2 text-center">
           <h3 className="text-xl font-bold">Create your artifact</h3>
           {isDragActive ? (
-            <p className="text-lg font-semibold text-muted-foreground">
+            <p className="text-muted-foreground text-lg font-semibold">
               Drop the file here...
             </p>
           ) : (
-            <p className="text-lg font-semibold text-muted-foreground">
+            <p className="text-muted-foreground text-lg font-semibold">
               {uploadedFile
                 ? `${uploadedFile.name}`
                 : "Drag'n'drop html file here"}

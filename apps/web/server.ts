@@ -465,12 +465,12 @@ const registerAssetRoute = async (
     const gz = compressDataIfAppropriate(bytes, metadata.type);
     const etag = ENABLE_ETAG ? computeEtag(bytes) : undefined;
     const asset: InMemoryAsset = {
-      etag,
-      gz,
       immutable: true,
       raw: bytes,
       size: bytes.byteLength,
       type: metadata.type,
+      ...(etag === undefined ? {} : { etag }),
+      ...(gz === undefined ? {} : { gz }),
     };
     routes[route] = createResponseHandler(asset);
     loaded.push({ ...metadata, size: bytes.byteLength });

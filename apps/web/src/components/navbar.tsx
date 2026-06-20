@@ -1,9 +1,9 @@
-import { CogIcon, UserCircleIcon } from "@hugeicons/core-free-icons";
+import { CogIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useMatch, useRouteContext } from "@tanstack/react-router";
 
 import { Button } from "#/components/ui/button";
-import { Group, GroupSeparator, GroupText } from "#/components/ui/group";
+import { Group, GroupSeparator } from "#/components/ui/group";
 import { signIn } from "#/lib/auth/client";
 
 import { ArtifactNavbar } from "./artifacts/artifact-navbar";
@@ -23,7 +23,7 @@ export const Navbar = () => {
   });
 
   return (
-    <nav className="bg-background flex justify-between items-center pt-4 px-2 md:px-6 py-2">
+    <nav className="bg-background flex items-center justify-between px-2 py-2 pt-4 md:px-6">
       <div className="flex items-center gap-4">
         <Logo />
         {artifactMatch?.params?.artifactId ? (
