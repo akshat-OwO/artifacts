@@ -4,15 +4,11 @@ import { Link, useMatch, useRouteContext } from "@tanstack/react-router";
 
 import { Button } from "#/components/ui/button";
 import { Group, GroupSeparator } from "#/components/ui/group";
-import { signIn } from "#/lib/auth/client";
+import { signInWithGoogle } from "#/lib/auth/sign-in";
 
 import { ArtifactNavbar } from "./artifacts/artifact-navbar";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
-
-const handleLogin = async () => {
-  await signIn.social({ provider: "google" });
-};
 
 export const Navbar = () => {
   const { session } = useRouteContext({ from: "__root__" });
@@ -47,7 +43,11 @@ export const Navbar = () => {
               </Button>
             </>
           )}
-          {!session && <Button onClick={handleLogin}>Login</Button>}
+          {!session && (
+            <Button onClick={signInWithGoogle} size="xl" variant="secondary">
+              Login
+            </Button>
+          )}
           <GroupSeparator />
           <ThemeToggle />
         </Group>
