@@ -6,18 +6,20 @@ import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 import { LoginDialog } from "#/components/login-dialog";
+import { Spinner } from "#/components/ui/spinner";
 import { uploadArtifactsMutations } from "#/lib/queries/upload/artifacts";
 
 export const Uploader = () => {
   const { session } = useRouteContext({ from: "__root__" });
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  const { mutate: upload } = useMutation(uploadArtifactsMutations());
+  const { mutate: upload, isPending } = useMutation(uploadArtifactsMutations());
 
   const { acceptedFiles, getRootProps, getInputProps, isDragActive } =
     useDropzone({
       accept: {
         "text/html": [".html", ".htm"],
       },
+      disabled: isPending,
       onDrop: (files) => {
         if (!session) {
           setLoginDialogOpen(true);
@@ -39,14 +41,22 @@ export const Uploader = () => {
         <input {...getInputProps()} className="hidden" />
         <div className="flex flex-col items-center justify-center gap-4">
           <div className="bg-secondary rounded-full p-4">
-            <HugeiconsIcon
-              icon={uploadedFile ? FileCode : Plus}
-              className="size-16"
-            />
+            {isPending ? (
+              <Spinner className="size-16" />
+            ) : (
+              <HugeiconsIcon
+                icon={uploadedFile ? FileCode : Plus}
+                className="size-16"
+              />
+            )}
           </div>
           <div className="space-y-2 text-center">
             <h3 className="text-xl font-bold">Create your artifact</h3>
-            {isDragActive ? (
+            {isPending ? (
+              <p className="text-muted-foreground text-lg font-semibold">
+                Creating your artifact...
+              </p>
+            ) : isDragActive ? (
               <p className="text-muted-foreground text-lg font-semibold">
                 Drop the file here...
               </p>
