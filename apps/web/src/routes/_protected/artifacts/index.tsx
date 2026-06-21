@@ -5,9 +5,11 @@ import { ArtifactsGrid } from "#/components/artifacts/artifacts-grid";
 import { getAllArtifactsOptions } from "#/lib/queries/artifacts/get-all";
 
 const RouteComponent = () => (
-  <Suspense fallback={"Loading..."}>
-    <ArtifactsGrid />
-  </Suspense>
+  <div className="h-full">
+    <Suspense fallback={"Loading..."}>
+      <ArtifactsGrid />
+    </Suspense>
+  </div>
 );
 
 export const Route = createFileRoute("/_protected/artifacts/")({

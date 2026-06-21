@@ -24,7 +24,7 @@ export const ArtifactsGrid = () => {
 
   if (data.length === 0) {
     return (
-      <Empty>
+      <Empty className="h-full">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <HugeiconsIcon icon={ArchiveIcon} />
