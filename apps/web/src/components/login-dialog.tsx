@@ -27,9 +27,7 @@ export const LoginDialog = ({ onOpenChange, open }: LoginDialogProps) => (
         <Button onClick={() => onOpenChange(false)} variant="outline">
           Cancel
         </Button>
-        <Button onClick={signInWithGoogle} size="xl">
-          Login
-        </Button>
+        <Button onClick={signInWithGoogle}>Login</Button>
       </DialogFooter>
     </DialogPopup>
   </Dialog>
