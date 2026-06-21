@@ -14,34 +14,65 @@ const MACBOOK_PRO_16_VIEWPORT = {
   width: 1728,
 } as const;
 
+const NAVIGATION_TIMEOUT_MS = 30_000;
+
+const errorMessage = (error: unknown): string => {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+
+  if ("cause" in error && error.cause !== undefined) {
+    return error.cause instanceof Error
+      ? error.cause.message
+      : String(error.cause);
+  }
+
+  return error.message;
+};
+
+const previewOperation = <A>(
+  operation: string,
+  evaluate: (signal: AbortSignal) => PromiseLike<A>
+): Effect.Effect<A, PreviewError> =>
+  Effect.tryPromise({
+    catch: (cause) =>
+      new PreviewError({
+        message: `${operation}: ${cause instanceof Error ? cause.message : String(cause)}`,
+      }),
+    try: evaluate,
+  });
+
 const createPreview = (url: string) =>
   Effect.gen(function* captureScreenshot() {
     const browser = yield* Browser;
     const page = yield* Effect.acquireRelease(
-      Effect.tryPromise(() =>
+      previewOperation("Create browser page", () =>
         browser.newPage({ viewport: MACBOOK_PRO_16_VIEWPORT })
       ),
       closePage
     );
 
-    yield* Effect.tryPromise(() =>
-      page.goto(url, { waitUntil: "networkidle" })
+    yield* previewOperation("Navigate to preview URL", () =>
+      page.goto(url, {
+        timeout: NAVIGATION_TIMEOUT_MS,
+        waitUntil: "load",
+      })
     );
 
-    const screenshot = yield* Effect.tryPromise(() =>
+    const screenshot = yield* previewOperation("Capture screenshot", () =>
       page.screenshot({ type: "png" })
     );
 
-    return yield* Effect.tryPromise(() =>
+    return yield* previewOperation("Convert screenshot to WebP", () =>
       new Bun.Image(screenshot).webp().bytes()
     );
   }).pipe(
     Effect.scoped,
+    Effect.tapCause((cause) =>
+      Effect.logError("Preview generation failed", cause)
+    ),
     Effect.mapError(
-      (cause) =>
-        new PreviewError({
-          message: cause instanceof Error ? cause.message : String(cause),
-        })
+      (cause) => new PreviewError({ message: errorMessage(cause) })
     )
   );
 
