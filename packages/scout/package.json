@@ -10,7 +10,7 @@
     "check-types": "tsc --noEmit",
     "start": "bun --bun src/index.ts",
     "dev": "bun --watch --bun src/index.ts",
-    "postinstall": "bun x playwright install --with-deps"
+    "install-playwright": "bun x playwright install --with-deps"
   },
   "dependencies": {
     "@effect/platform-bun": "catalog:",
