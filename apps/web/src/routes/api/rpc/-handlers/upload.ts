@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -11,6 +12,7 @@ import {
   MAX_FILE_SIZE,
 } from "#/lib/errors/upload/file-size";
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
+import { ScoutApiLive, ScoutApiService } from "#/lib/scout";
 import { Storage, StorageLive } from "#/lib/storage";
 
 import { Api } from "../-api";
@@ -52,6 +54,38 @@ export const UploadApiHandler = HttpApiBuilder.group(
           id: artifactId,
           userId: user.id,
         });
+
+        const capturePreview = Effect.gen(function* capturePreview() {
+          const backgroundDb = yield* PgDrizzle.makeWithDefaults();
+          const scoutApi = yield* ScoutApiService;
+          const backgroundStorage = yield* Storage;
+          const previewUrl = yield* Effect.promise(() =>
+            backgroundStorage.r2.url(uploadedFile.key)
+          );
+          const preview = yield* scoutApi.getCapture(previewUrl);
+          const previewKey = `artifacts/${user.id}/${artifactId}/preview`;
+
+          yield* Effect.promise(() =>
+            backgroundStorage.r2.upload(previewKey, preview, {
+              contentType: "image/webp",
+              metadata: { artifactId, userId: user.id },
+            })
+          );
+
+          yield* backgroundDb
+            .update(artifact)
+            .set({ previewKey })
+            .where(eq(artifact.id, artifactId));
+        }).pipe(
+          Effect.provide(
+            Layer.mergeAll(ScoutApiLive, StorageLive, PgClientLive)
+          ),
+          Effect.catchCause((cause) =>
+            Effect.logError("Failed to generate artifact preview", cause)
+          )
+        );
+
+        yield* Effect.forkDetach(capturePreview);
 
         return {
           data: { id: artifactId },

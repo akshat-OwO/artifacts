@@ -6,7 +6,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { AuthUser } from "#/lib/auth/context";
 import { PgClientLive } from "#/lib/db";
-import { artifact } from "#/lib/db/schemas";
+import { artifact, DEFAULT_ARTIFACT_PREVIEW_KEY } from "#/lib/db/schemas";
 import { ArtifactNotFoundError } from "#/lib/errors/artifacts/artifact-not-found";
 import { PreviewError } from "#/lib/errors/artifacts/preview-error";
 import { Storage, StorageLive } from "#/lib/storage";
@@ -77,6 +77,7 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
       .handle("getArtifacts", () =>
         Effect.gen(function* handler() {
           const db = yield* PgDrizzle.makeWithDefaults();
+          const storage = yield* Storage;
           const user = yield* AuthUser;
 
           const artifactsRow = yield* db
@@ -84,7 +85,22 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
             .from(artifact)
             .where(eq(artifact.userId, user.id));
 
-          return artifactsRow.map((a) => ({ author: user.id, ...a }));
-        }).pipe(Effect.provide(PgClientLive))
+          return yield* Effect.all(
+            artifactsRow.map((artifactRow) =>
+              Effect.gen(function* resolvePreviewUrl() {
+                const previewKey =
+                  artifactRow.previewKey === DEFAULT_ARTIFACT_PREVIEW_KEY
+                    ? `/${DEFAULT_ARTIFACT_PREVIEW_KEY}`
+                    : yield* Effect.tryPromise({
+                        catch: () => new PreviewError(),
+                        try: () => storage.r2.url(artifactRow.previewKey),
+                      });
+
+                return { author: user.id, ...artifactRow, previewKey };
+              })
+            ),
+            { concurrency: 8 }
+          );
+        }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
       )
 );

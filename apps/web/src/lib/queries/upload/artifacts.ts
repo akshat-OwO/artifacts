@@ -1,8 +1,11 @@
-import { mutationOptions } from "@tanstack/react-query";
+import { mutationOptions, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import * as Effect from "effect/Effect";
 
 import { toastManager } from "#/components/ui/toast";
 import { ApiClient } from "#/routes/api/rpc/-client";
+
+import { getAllArtifactsOptions } from "../artifacts/get-all";
 
 const uploadArtifactHandler = Effect.fn(
   "artifacts/mutations/uploadArtifactHandler"
@@ -12,8 +15,11 @@ const uploadArtifactHandler = Effect.fn(
 });
 
 const UPLOAD_DEDUP_ID = "upload-artifact-mutation";
-export const uploadArtifactsMutations = () =>
-  mutationOptions({
+export const uploadArtifactsMutations = () => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  return mutationOptions({
     mutationFn: async (file: File) => {
       toastManager.add({
         description: "Please wait...",
@@ -51,12 +57,17 @@ export const uploadArtifactsMutations = () =>
         type: "error",
       });
     },
-    onSuccess: () => {
+    onSuccess: async ({ data: { id } }) => {
       toastManager.add({
         description: "Upload completed successfully!",
         id: UPLOAD_DEDUP_ID,
         title: "Success!",
         type: "success",
       });
+      await queryClient.invalidateQueries({
+        queryKey: getAllArtifactsOptions().queryKey,
+      });
+      navigate({ params: { artifactId: id }, to: "/a/$artifactId" });
     },
   });
+};

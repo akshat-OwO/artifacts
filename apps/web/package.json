@@ -17,12 +17,13 @@
     "db:migrate": "bunx --bun drizzle-kit migrate"
   },
   "dependencies": {
+    "@artifacts/scout": "workspace:*",
     "@aws-sdk/client-s3": "^3.1071.0",
     "@aws-sdk/s3-presigned-post": "^3.1071.0",
     "@aws-sdk/s3-request-presigner": "^3.1071.0",
     "@base-ui/react": "^1.5.0",
     "@better-auth/drizzle-adapter": "^1.6.18",
-    "@effect/sql-pg": "^4.0.0-beta.83",
+    "@effect/sql-pg": "catalog:",
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource-variable/geist-mono": "^5.2.8",
     "@hugeicons/core-free-icons": "^4.2.0",
@@ -41,7 +42,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "drizzle-orm": "^1.0.0-beta.22",
-    "effect": "^4.0.0-beta.83",
+    "effect": "catalog:",
     "files-sdk": "^1.9.0",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",

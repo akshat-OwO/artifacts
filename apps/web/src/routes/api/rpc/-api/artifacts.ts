@@ -34,7 +34,7 @@ export class ArtifactsApi extends HttpApiGroup.make("artifacts")
   )
   .add(
     HttpApiEndpoint.get("getArtifacts", "/artifacts", {
-      error: [EffectDrizzleQueryError, SqlError],
+      error: [EffectDrizzleQueryError, SqlError, PreviewError],
       success: Schema.Array(GetArtifactById),
     })
   )

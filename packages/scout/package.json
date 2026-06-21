@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "module": "index.ts",
+  "exports": {
+    "./api": "./src/routes/index.ts"
+  },
   "scripts": {
     "check-types": "tsc --noEmit",
     "start": "bun --bun src/index.ts",
@@ -10,8 +13,8 @@
     "postinstall": "bun x playwright install --with-deps"
   },
   "dependencies": {
-    "@effect/platform-bun": "^4.0.0-beta.85",
-    "effect": "^4.0.0-beta.85",
+    "@effect/platform-bun": "catalog:",
+    "effect": "catalog:",
     "playwright": "^1.61.0"
   },
   "devDependencies": {

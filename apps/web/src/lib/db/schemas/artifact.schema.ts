@@ -16,6 +16,8 @@ const randomArtifactName = sql<string>`(
   ]
 )[1 + floor(random() * 8)::integer]`;
 
+export const DEFAULT_ARTIFACT_PREVIEW_KEY = "preview/preview-fallback.png";
+
 export const artifact = pgTable(
   "artifact",
   {
@@ -24,7 +26,7 @@ export const artifact = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     name: text("name").default(randomArtifactName).notNull(),
     previewKey: text("preview_key")
-      .default("preview/preview-fallback.png")
+      .default(DEFAULT_ARTIFACT_PREVIEW_KEY)
       .notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
