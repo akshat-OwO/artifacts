@@ -44,7 +44,7 @@ export const Navbar = () => {
             </>
           )}
           {!session && (
-            <Button onClick={signInWithGoogle} size="xl" variant="secondary">
+            <Button onClick={signInWithGoogle} size="xl">
               Login
             </Button>
           )}
