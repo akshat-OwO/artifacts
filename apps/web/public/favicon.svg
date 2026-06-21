@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .mark { color: #262626; }
+    @media (prefers-color-scheme: dark) {
+      .mark { color: #f5f5f5; }
+    }
+  </style>
+  <g class="mark">
+    <rect
+      x="5"
+      y="9"
+      width="54"
+      height="46"
+      rx="8"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="3"
+      stroke-linecap="round"
+      stroke-dasharray="5 5"
+    />
+    <path
+      fill="currentColor"
+      d="M29.1 18h6l11 29h-6.2l-2.5-7.1H26.6L24.1 47H18l11.1-29Zm-.7 16.7h7.2L32 24.2l-3.6 10.5Z"
+    />
+  </g>
+</svg>
