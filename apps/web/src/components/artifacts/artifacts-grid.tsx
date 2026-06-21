@@ -1,7 +1,18 @@
+import { ArchiveIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 
+import { Button } from "#/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "#/components/ui/empty";
 import { getAllArtifactsOptions } from "#/lib/queries/artifacts/get-all";
 
 export const ArtifactsGrid = () => {
@@ -9,6 +20,25 @@ export const ArtifactsGrid = () => {
 
   if (!data) {
     return null;
+  }
+
+  if (data.length === 0) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <HugeiconsIcon icon={ArchiveIcon} />
+          </EmptyMedia>
+          <EmptyTitle>No artifacts yet</EmptyTitle>
+          <EmptyDescription>
+            Upload an HTML file to create your first artifact.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button render={<Link to="/" />}>Create artifact</Button>
+        </EmptyContent>
+      </Empty>
+    );
   }
 
   return (
