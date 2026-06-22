@@ -21,12 +21,6 @@ export const uploadArtifactsMutations = () => {
 
   return mutationOptions({
     mutationFn: async (file: File) => {
-      toastManager.add({
-        description: "Please wait...",
-        id: UPLOAD_DEDUP_ID,
-        title: "Uploading Artifact",
-        type: "loading",
-      });
       const program = uploadArtifactHandler(file).pipe(
         Effect.catchTags({
           FileTooLargeError: () =>
