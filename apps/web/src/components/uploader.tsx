@@ -51,7 +51,9 @@ export const Uploader = () => {
             )}
           </div>
           <div className="space-y-2 text-center">
-            <h3 className="text-xl font-bold">Create your artifact</h3>
+            {!isPending && (
+              <h3 className="text-xl font-bold">Create your artifact</h3>
+            )}
             {isPending ? (
               <p className="text-muted-foreground text-lg font-semibold">
                 Creating your artifact...
