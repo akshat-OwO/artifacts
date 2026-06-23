@@ -31,6 +31,17 @@ export const Uploader = () => {
     });
 
   const uploadedFile = acceptedFiles.length > 0 ? acceptedFiles[0] : null;
+  const uploadStatusText = (() => {
+    if (isPending) {
+      return "Creating your artifact...";
+    }
+
+    if (isDragActive) {
+      return "Drop the file here...";
+    }
+
+    return uploadedFile ? uploadedFile.name : "Drag'n'drop html file here";
+  })();
 
   return (
     <>
@@ -54,21 +65,9 @@ export const Uploader = () => {
             {!isPending && (
               <h3 className="text-xl font-bold">Create your artifact</h3>
             )}
-            {isPending ? (
-              <p className="text-muted-foreground text-lg font-semibold">
-                Creating your artifact...
-              </p>
-            ) : isDragActive ? (
-              <p className="text-muted-foreground text-lg font-semibold">
-                Drop the file here...
-              </p>
-            ) : (
-              <p className="text-muted-foreground text-lg font-semibold">
-                {uploadedFile
-                  ? `${uploadedFile.name}`
-                  : "Drag'n'drop html file here"}
-              </p>
-            )}
+            <p className="text-muted-foreground text-lg font-semibold">
+              {uploadStatusText}
+            </p>
           </div>
         </div>
       </div>

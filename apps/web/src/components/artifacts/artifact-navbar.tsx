@@ -31,8 +31,8 @@ export const ArtifactNavbar = ({ artifactId }: ArtifactNavbarProps) => {
 
   return (
     <div className="flex flex-col">
-      <p className="font-semibold">{data.name}</p>
-      <p className="text-muted-foreground text-sm">
+      <p className="line-clamp-1 font-semibold">{data.name}</p>
+      <p className="text-muted-foreground line-clamp-1 text-sm">
         {timestampLabel}{" "}
         {formatDistanceToNow(latestTimestamp, { addSuffix: true })}
       </p>

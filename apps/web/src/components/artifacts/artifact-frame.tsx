@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 
 import { getArtifactPreviewByKeyOptions } from "#/lib/queries/artifacts/get-preview-by-key";
 
@@ -16,11 +17,20 @@ export const ArtifactFrame = ({
   artifactKey,
   title,
 }: ArtifactFrameProps) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const {
     data: url,
     error,
     isLoading,
   } = useQuery(getArtifactPreviewByKeyOptions(artifactId, artifactKey));
+
+  useEffect(() => {
+    if (!url) {
+      return;
+    }
+
+    iframeRef.current?.contentWindow?.location.replace(url);
+  }, [url]);
 
   if (isLoading) {
     return <ArtifactPreviewLoader text="Loading artifact..." />;
@@ -34,9 +44,10 @@ export const ArtifactFrame = ({
     <iframe
       allow=""
       className="h-full w-full rounded-md"
+      ref={iframeRef}
       referrerPolicy="no-referrer"
       sandbox="allow-scripts"
-      src={url}
+      src="about:blank"
       title={title}
     />
   );
