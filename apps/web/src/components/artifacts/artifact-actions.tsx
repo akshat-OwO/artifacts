@@ -1,9 +1,20 @@
-import { Delete02Icon, FileCode, PencilLine } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  FileCode,
+  PencilLine,
+  Share08Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type React from "react";
-import { useEffect, useId, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useState,
+} from "react";
 import { useDropzone } from "react-dropzone";
 
 import {
@@ -25,26 +36,74 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Group, GroupSeparator } from "#/components/ui/group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "#/components/ui/input-group";
 import { Input } from "#/components/ui/input";
+import { MenuItem, MenuSeparator } from "#/components/ui/menu";
+import { toastManager } from "#/components/ui/toast";
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
 import {
   deleteArtifactMutation,
+  setArtifactVisibilityMutation,
   updateArtifactMutation,
 } from "#/lib/queries/artifacts/mutations";
 import type { UpdateArtifactInput } from "#/lib/queries/artifacts/mutations";
-
-interface ArtifactActionsProps {
-  artifactId: string;
-}
 
 interface EditArtifactFormValues {
   name: string;
 }
 
-export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
+interface ArtifactActionsContextValue {
+  onDelete: () => void;
+  onEdit: () => void;
+  onShare: () => void;
+}
+
+const ArtifactActionsContext =
+  createContext<ArtifactActionsContextValue | null>(null);
+
+const useArtifactActions = () => {
+  const context = useContext(ArtifactActionsContext);
+
+  if (!context) {
+    throw new Error(
+      "Artifact action components must be used within ArtifactActionsProvider."
+    );
+  }
+
+  return context;
+};
+
+const getShareUrl = (artifactId: string) => {
+  const origin =
+    typeof window === "undefined"
+      ? import.meta.env.VITE_BASE_URL
+      : window.location.origin;
+
+  return `${origin}/s/${artifactId}`;
+};
+
+const ARTIFACT_SHARE_COPY_DEDUP_ID = "artifact-share-copy";
+
+interface ArtifactActionsProviderProps {
+  artifactId: string;
+  children: React.ReactNode;
+}
+
+export const ArtifactActionsProvider = ({
+  artifactId,
+  children,
+}: ArtifactActionsProviderProps) => {
   const nameInputId = useId();
+  const shareUrlInputId = useId();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [confirmPublicOpen, setConfirmPublicOpen] = useState(false);
+  const [confirmPrivateOpen, setConfirmPrivateOpen] = useState(false);
   const [file, setFile] = useState<File | undefined>();
   const { data: artifact } = useQuery(getArtifactByIdOptions(artifactId));
   const { mutate: updateArtifact, isPending: isUpdating } = useMutation(
@@ -53,6 +112,8 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
   const { mutate: deleteArtifact, isPending: isDeleting } = useMutation(
     deleteArtifactMutation()
   );
+  const { mutate: setArtifactVisibility, isPending: isUpdatingVisibility } =
+    useMutation(setArtifactVisibilityMutation());
   const form = useForm({
     defaultValues: {
       name: artifact?.name ?? "",
@@ -115,28 +176,152 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
     form.handleSubmit();
   };
 
+  const handleShareClick = () => {
+    if (artifact?.isPublic) {
+      setShareOpen(true);
+      return;
+    }
+
+    setConfirmPublicOpen(true);
+  };
+
+  const handleConfirmMakePublic = () => {
+    setArtifactVisibility(
+      { artifactId, isPublic: true },
+      {
+        onSuccess: () => {
+          setConfirmPublicOpen(false);
+          setShareOpen(true);
+        },
+      }
+    );
+  };
+
+  const handleConfirmStopSharing = () => {
+    setArtifactVisibility(
+      { artifactId, isPublic: false },
+      {
+        onSuccess: () => {
+          setConfirmPrivateOpen(false);
+          setShareOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getShareUrl(artifactId));
+      toastManager.add({
+        description: "Share link copied to clipboard.",
+        id: ARTIFACT_SHARE_COPY_DEDUP_ID,
+        title: "Copied",
+        type: "success",
+      });
+    } catch {
+      toastManager.add({
+        description: "Could not copy the share link.",
+        id: ARTIFACT_SHARE_COPY_DEDUP_ID,
+        title: "Error!",
+        type: "error",
+      });
+    }
+  };
+
   return (
-    <>
-      <Group>
-        <Button
-          onClick={() => setEditOpen(true)}
-          size="icon-xl"
-          title="Edit artifact"
-          variant="secondary"
-        >
-          <HugeiconsIcon icon={PencilLine} />
-        </Button>
-        <GroupSeparator />
-        <Button
-          className="border-none"
-          onClick={() => setDeleteOpen(true)}
-          size="icon-xl"
-          title="Delete artifact"
-          variant="destructive-outline"
-        >
-          <HugeiconsIcon icon={Delete02Icon} />
-        </Button>
-      </Group>
+    <ArtifactActionsContext.Provider
+      value={{
+        onDelete: () => setDeleteOpen(true),
+        onEdit: () => setEditOpen(true),
+        onShare: handleShareClick,
+      }}
+    >
+      {children}
+      <Dialog onOpenChange={setShareOpen} open={shareOpen}>
+        <DialogPopup>
+          <DialogHeader>
+            <DialogTitle>Share artifact</DialogTitle>
+            <DialogDescription>
+              Anyone with this link can view your artifact.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 px-6 pb-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor={shareUrlInputId}>
+                Share link
+              </label>
+              <InputGroup>
+                <InputGroupInput
+                  id={shareUrlInputId}
+                  readOnly
+                  value={getShareUrl(artifactId)}
+                />
+                <InputGroupAddon align="inline-end">
+                  <Button onClick={handleCopyShareLink} size="sm" type="button">
+                    Copy
+                  </Button>
+                </InputGroupAddon>
+              </InputGroup>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setConfirmPrivateOpen(true)}
+              variant="destructive-outline"
+            >
+              Stop sharing
+            </Button>
+            <Button onClick={() => setShareOpen(false)} variant="outline">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogPopup>
+      </Dialog>
+      <AlertDialog onOpenChange={setConfirmPrivateOpen} open={confirmPrivateOpen}>
+        <AlertDialogPopup>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stop sharing artifact?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The share link for {artifact?.name ?? "this artifact"} will stop
+              working and only you will be able to view it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose render={<Button variant="outline" />}>
+              Cancel
+            </AlertDialogClose>
+            <Button
+              loading={isUpdatingVisibility}
+              onClick={handleConfirmStopSharing}
+              variant="destructive"
+            >
+              Stop sharing
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogPopup>
+      </AlertDialog>
+      <AlertDialog onOpenChange={setConfirmPublicOpen} open={confirmPublicOpen}>
+        <AlertDialogPopup>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Make artifact public?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will make {artifact?.name ?? "this artifact"} visible to
+              anyone with the share link.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose render={<Button variant="outline" />}>
+              Cancel
+            </AlertDialogClose>
+            <Button
+              loading={isUpdatingVisibility}
+              onClick={handleConfirmMakePublic}
+            >
+              Make public
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogPopup>
+      </AlertDialog>
       <Dialog onOpenChange={setEditOpen} open={editOpen}>
         <DialogPopup>
           <form onSubmit={handleSubmitEdit}>
@@ -229,6 +414,83 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
           </AlertDialogFooter>
         </AlertDialogPopup>
       </AlertDialog>
+    </ArtifactActionsContext.Provider>
+  );
+};
+
+export const ArtifactActionsToolbar = () => {
+  const { onDelete, onEdit, onShare } = useArtifactActions();
+
+  return (
+    <Group>
+      <Button
+        onClick={onShare}
+        size="icon-xl"
+        title="Share artifact"
+        variant="secondary"
+      >
+        <HugeiconsIcon icon={Share08Icon} />
+      </Button>
+      <GroupSeparator />
+      <Button
+        onClick={onEdit}
+        size="icon-xl"
+        title="Edit artifact"
+        variant="secondary"
+      >
+        <HugeiconsIcon icon={PencilLine} />
+      </Button>
+      <GroupSeparator />
+      <Button
+        className="border-none"
+        onClick={onDelete}
+        size="icon-xl"
+        title="Delete artifact"
+        variant="destructive-outline"
+      >
+        <HugeiconsIcon icon={Delete02Icon} />
+      </Button>
+    </Group>
+  );
+};
+
+export const ArtifactActionsMenuItems = () => {
+  const { onDelete, onEdit, onShare } = useArtifactActions();
+
+  return (
+    <>
+      <MenuItem closeOnClick={false} onClick={onShare}>
+        <HugeiconsIcon icon={Share08Icon} />
+        Share
+      </MenuItem>
+      <MenuItem closeOnClick={false} onClick={onEdit}>
+        <HugeiconsIcon icon={PencilLine} />
+        Edit
+      </MenuItem>
+      <MenuItem closeOnClick={false} onClick={onDelete} variant="destructive">
+        <HugeiconsIcon icon={Delete02Icon} />
+        Delete
+      </MenuItem>
+      <MenuSeparator />
     </>
   );
 };
+
+interface ArtifactActionsProps {
+  artifactId: string;
+  layout?: "toolbar" | "menu";
+}
+
+/** @deprecated Use ArtifactActionsProvider with ArtifactActionsToolbar or ArtifactActionsMenuItems */
+export const ArtifactActions = ({
+  artifactId,
+  layout = "toolbar",
+}: ArtifactActionsProps) => (
+  <ArtifactActionsProvider artifactId={artifactId}>
+    {layout === "toolbar" ? (
+      <ArtifactActionsToolbar />
+    ) : (
+      <ArtifactActionsMenuItems />
+    )}
+  </ArtifactActionsProvider>
+);

@@ -2,15 +2,29 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
+import { getPublicArtifactByIdOptions } from "#/lib/queries/artifacts/get-public-by-id";
 
 import { Skeleton } from "../ui/skeleton";
 
 interface ArtifactNavbarProps {
   artifactId: string;
+  visibility?: "owner" | "public";
 }
 
-export const ArtifactNavbar = ({ artifactId }: ArtifactNavbarProps) => {
-  const { data, isLoading } = useQuery(getArtifactByIdOptions(artifactId));
+export const ArtifactNavbar = ({
+  artifactId,
+  visibility = "owner",
+}: ArtifactNavbarProps) => {
+  const ownerQuery = useQuery({
+    ...getArtifactByIdOptions(artifactId),
+    enabled: visibility === "owner",
+  });
+  const publicQuery = useQuery({
+    ...getPublicArtifactByIdOptions(artifactId),
+    enabled: visibility === "public",
+  });
+  const { data, isLoading } =
+    visibility === "public" ? publicQuery : ownerQuery;
 
   if (isLoading) {
     return (
