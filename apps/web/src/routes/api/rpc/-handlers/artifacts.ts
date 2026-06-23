@@ -77,6 +77,7 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
               artifactKey: artifact.artifactKey,
               createdAt: artifact.createdAt,
               id: artifact.id,
+              isPublic: artifact.isPublic,
               name: artifact.name,
               previewKey: artifact.previewKey,
               updatedAt: artifact.updatedAt,
@@ -145,7 +146,11 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
                         try: () => storage.r2.url(artifactRow.previewKey),
                       });
 
-                return { author: user.id, ...artifactRow, previewKey };
+                return {
+                  author: user.name,
+                  ...artifactRow,
+                  previewKey,
+                };
               })
             ),
             { concurrency: 8 }
@@ -207,6 +212,7 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
               artifactKey: artifact.artifactKey,
               createdAt: artifact.createdAt,
               id: artifact.id,
+              isPublic: artifact.isPublic,
               name: artifact.name,
               previewKey: artifact.previewKey,
               updatedAt: artifact.updatedAt,
@@ -228,6 +234,36 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
 
           return { author: user.name, ...updatedArtifact };
         }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
+      )
+      .handle(
+        "setArtifactVisibility",
+        ({ params: { artifactId }, payload: { isPublic } }) =>
+          Effect.gen(function* handler() {
+            const db = yield* PgDrizzle.makeWithDefaults();
+            const user = yield* AuthUser;
+
+            const [updatedArtifact] = yield* db
+              .update(artifact)
+              .set({ isPublic })
+              .where(
+                and(eq(artifact.id, artifactId), eq(artifact.userId, user.id))
+              )
+              .returning({
+                artifactKey: artifact.artifactKey,
+                createdAt: artifact.createdAt,
+                id: artifact.id,
+                isPublic: artifact.isPublic,
+                name: artifact.name,
+                previewKey: artifact.previewKey,
+                updatedAt: artifact.updatedAt,
+              });
+
+            if (!updatedArtifact) {
+              return yield* new ArtifactNotFoundError();
+            }
+
+            return { author: user.name, ...updatedArtifact };
+          }).pipe(Effect.provide(PgClientLive))
       )
       .handle("deleteArtifact", ({ params: { artifactId } }) =>
         Effect.gen(function* handler() {

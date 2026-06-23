@@ -5,7 +5,17 @@ export const GetArtifactById = Schema.Struct({
   author: Schema.String,
   createdAt: Schema.Date,
   id: Schema.String.check(Schema.isUUID()),
+  isPublic: Schema.Boolean,
   name: Schema.String,
   previewKey: Schema.String,
+  updatedAt: Schema.Date,
+});
+
+export const GetPublicArtifactById = Schema.Struct({
+  artifactKey: Schema.String,
+  author: Schema.String,
+  createdAt: Schema.Date,
+  id: Schema.String.check(Schema.isUUID()),
+  name: Schema.String,
   updatedAt: Schema.Date,
 });

@@ -24,13 +24,26 @@ export const Navbar = () => {
     shouldThrow: false,
   });
 
+  const sharedArtifactMatch = useMatch({
+    from: "/s/$artifactId",
+    shouldThrow: false,
+  });
+
+  const activeArtifactId =
+    artifactMatch?.params?.artifactId ??
+    sharedArtifactMatch?.params?.artifactId;
+  const artifactVisibility = sharedArtifactMatch ? "public" : "owner";
+
   return (
     <nav className="bg-background sticky top-0 z-20 flex items-center justify-between gap-4 px-2 py-2 pt-4 md:px-6">
       <div className="flex items-center gap-4">
         <Logo />
         {artifactsListPage && <p className="font-semibold">Your artifacts</p>}
-        {artifactMatch?.params?.artifactId ? (
-          <ArtifactNavbar artifactId={artifactMatch.params.artifactId} />
+        {activeArtifactId ? (
+          <ArtifactNavbar
+            artifactId={activeArtifactId}
+            visibility={artifactVisibility}
+          />
         ) : null}
       </div>
       <div className="flex items-center gap-2">

@@ -62,6 +62,22 @@ export class ArtifactsApi extends HttpApiGroup.make("artifacts")
     })
   )
   .add(
+    HttpApiEndpoint.patch(
+      "setArtifactVisibility",
+      "/artifacts/:artifactId/visibility",
+      {
+        error: [EffectDrizzleQueryError, SqlError, ArtifactNotFoundError],
+        params: Schema.Struct({
+          artifactId: Schema.String.check(Schema.isUUID()),
+        }),
+        payload: Schema.Struct({
+          isPublic: Schema.Boolean,
+        }),
+        success: GetArtifactById,
+      }
+    )
+  )
+  .add(
     HttpApiEndpoint.delete("deleteArtifact", "/artifacts/:artifactId", {
       error: [EffectDrizzleQueryError, SqlError, ArtifactNotFoundError],
       params: Schema.Struct({

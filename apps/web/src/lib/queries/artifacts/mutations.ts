@@ -39,8 +39,27 @@ const deleteArtifactHandler = Effect.fn(
   });
 });
 
+const setArtifactVisibilityHandler = Effect.fn(
+  "artifacts/mutations/setArtifactVisibilityHandler"
+)(function* setArtifactVisibilityHandler({
+  artifactId,
+  isPublic,
+}: SetArtifactVisibilityInput) {
+  const apiClient = yield* ApiClient;
+  return yield* apiClient.artifacts.setArtifactVisibility({
+    params: { artifactId },
+    payload: { isPublic },
+  });
+});
+
 const ARTIFACT_EDIT_DEDUP_ID = "artifact-edit-mutation";
 const ARTIFACT_DELETE_DEDUP_ID = "artifact-delete-mutation";
+const ARTIFACT_VISIBILITY_DEDUP_ID = "artifact-visibility-mutation";
+
+export interface SetArtifactVisibilityInput {
+  artifactId: string;
+  isPublic: boolean;
+}
 
 export const updateArtifactMutation = () => {
   const queryClient = useQueryClient();
@@ -162,6 +181,55 @@ export const deleteArtifactMutation = () => {
         queryKey: getAllArtifactsOptions().queryKey,
       });
       await navigate({ replace: true, to: "/artifacts" });
+    },
+  });
+};
+
+export const setArtifactVisibilityMutation = () => {
+  const queryClient = useQueryClient();
+
+  return mutationOptions({
+    mutationFn: async (input: SetArtifactVisibilityInput) => {
+      const program = setArtifactVisibilityHandler(input).pipe(
+        Effect.catchTags({
+          ArtifactNotFoundError: () => Effect.fail("Artifact not found."),
+          Unauthorized: () => Effect.fail("Unauthorized"),
+        }),
+        Effect.catchTag(
+          [
+            "EffectDrizzleQueryError",
+            "HttpClientError",
+            "SchemaError",
+            "SqlError",
+          ],
+          () => Effect.fail("Something went wrong. Please try again.")
+        ),
+        Effect.provide(ApiClient.layer)
+      );
+
+      return await Effect.runPromise(program);
+    },
+    mutationKey: ["artifacts", "visibility"],
+    onError: (error) => {
+      toastManager.add({
+        description: String(error),
+        id: ARTIFACT_VISIBILITY_DEDUP_ID,
+        title: "Error!",
+        type: "error",
+      });
+    },
+    onSuccess: async (artifact) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: getAllArtifactsOptions().queryKey,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getArtifactByIdOptions(artifact.id).queryKey,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["public-artifacts", artifact.id],
+        }),
+      ]);
     },
   });
 };
