@@ -219,6 +219,15 @@ export const setArtifactVisibilityMutation = () => {
       });
     },
     onSuccess: async (artifact) => {
+      toastManager.add({
+        description: artifact.isPublic
+          ? "Anyone with the link can now view this artifact."
+          : "This artifact is no longer publicly shared.",
+        id: ARTIFACT_VISIBILITY_DEDUP_ID,
+        title: artifact.isPublic ? "Artifact shared" : "Sharing stopped",
+        type: "success",
+      });
+
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: getAllArtifactsOptions().queryKey,

@@ -71,6 +71,7 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmPublicOpen, setConfirmPublicOpen] = useState(false);
+  const [confirmPrivateOpen, setConfirmPrivateOpen] = useState(false);
   const [file, setFile] = useState<File | undefined>();
   const { data: artifact } = useQuery(getArtifactByIdOptions(artifactId));
   const { mutate: updateArtifact, isPending: isUpdating } = useMutation(
@@ -79,7 +80,7 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
   const { mutate: deleteArtifact, isPending: isDeleting } = useMutation(
     deleteArtifactMutation()
   );
-  const { mutate: setArtifactVisibility, isPending: isMakingPublic } =
+  const { mutate: setArtifactVisibility, isPending: isUpdatingVisibility } =
     useMutation(setArtifactVisibilityMutation());
   const form = useForm({
     defaultValues: {
@@ -164,6 +165,18 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
     );
   };
 
+  const handleConfirmStopSharing = () => {
+    setArtifactVisibility(
+      { artifactId, isPublic: false },
+      {
+        onSuccess: () => {
+          setConfirmPrivateOpen(false);
+          setShareOpen(false);
+        },
+      }
+    );
+  };
+
   const handleCopyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(getShareUrl(artifactId));
@@ -242,12 +255,41 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
             </div>
           </div>
           <DialogFooter>
+            <Button
+              onClick={() => setConfirmPrivateOpen(true)}
+              variant="destructive-outline"
+            >
+              Stop sharing
+            </Button>
             <Button onClick={() => setShareOpen(false)} variant="outline">
               Close
             </Button>
           </DialogFooter>
         </DialogPopup>
       </Dialog>
+      <AlertDialog onOpenChange={setConfirmPrivateOpen} open={confirmPrivateOpen}>
+        <AlertDialogPopup>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stop sharing artifact?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The share link for {artifact?.name ?? "this artifact"} will stop
+              working and only you will be able to view it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose render={<Button variant="outline" />}>
+              Cancel
+            </AlertDialogClose>
+            <Button
+              loading={isUpdatingVisibility}
+              onClick={handleConfirmStopSharing}
+              variant="destructive"
+            >
+              Stop sharing
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogPopup>
+      </AlertDialog>
       <AlertDialog onOpenChange={setConfirmPublicOpen} open={confirmPublicOpen}>
         <AlertDialogPopup>
           <AlertDialogHeader>
@@ -261,7 +303,10 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
             <AlertDialogClose render={<Button variant="outline" />}>
               Cancel
             </AlertDialogClose>
-            <Button loading={isMakingPublic} onClick={handleConfirmMakePublic}>
+            <Button
+              loading={isUpdatingVisibility}
+              onClick={handleConfirmMakePublic}
+            >
               Make public
             </Button>
           </AlertDialogFooter>
