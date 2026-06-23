@@ -53,8 +53,14 @@ interface EditArtifactFormValues {
   name: string;
 }
 
-const getShareUrl = (artifactId: string) =>
-  `${window.location.origin}/s/${artifactId}`;
+const getShareUrl = (artifactId: string) => {
+  const origin =
+    typeof window === "undefined"
+      ? import.meta.env.VITE_BASE_URL
+      : window.location.origin;
+
+  return `${origin}/s/${artifactId}`;
+};
 
 const ARTIFACT_SHARE_COPY_DEDUP_ID = "artifact-share-copy";
 
