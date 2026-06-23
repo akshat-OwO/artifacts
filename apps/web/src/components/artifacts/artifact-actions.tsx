@@ -8,7 +8,13 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type React from "react";
-import { useEffect, useId, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useState,
+} from "react";
 import { useDropzone } from "react-dropzone";
 
 import {
@@ -46,14 +52,30 @@ import {
 } from "#/lib/queries/artifacts/mutations";
 import type { UpdateArtifactInput } from "#/lib/queries/artifacts/mutations";
 
-interface ArtifactActionsProps {
-  artifactId: string;
-  layout?: "toolbar" | "menu";
-}
-
 interface EditArtifactFormValues {
   name: string;
 }
+
+interface ArtifactActionsContextValue {
+  onDelete: () => void;
+  onEdit: () => void;
+  onShare: () => void;
+}
+
+const ArtifactActionsContext =
+  createContext<ArtifactActionsContextValue | null>(null);
+
+const useArtifactActions = () => {
+  const context = useContext(ArtifactActionsContext);
+
+  if (!context) {
+    throw new Error(
+      "Artifact action components must be used within ArtifactActionsProvider."
+    );
+  }
+
+  return context;
+};
 
 const getShareUrl = (artifactId: string) => {
   const origin =
@@ -66,10 +88,15 @@ const getShareUrl = (artifactId: string) => {
 
 const ARTIFACT_SHARE_COPY_DEDUP_ID = "artifact-share-copy";
 
-export const ArtifactActions = ({
+interface ArtifactActionsProviderProps {
+  artifactId: string;
+  children: React.ReactNode;
+}
+
+export const ArtifactActionsProvider = ({
   artifactId,
-  layout = "toolbar",
-}: ArtifactActionsProps) => {
+  children,
+}: ArtifactActionsProviderProps) => {
   const nameInputId = useId();
   const shareUrlInputId = useId();
   const [editOpen, setEditOpen] = useState(false);
@@ -202,54 +229,14 @@ export const ArtifactActions = ({
   };
 
   return (
-    <>
-      {layout === "toolbar" ? (
-        <Group>
-          <Button
-            onClick={handleShareClick}
-            size="icon-xl"
-            title="Share artifact"
-            variant="secondary"
-          >
-            <HugeiconsIcon icon={Share08Icon} />
-          </Button>
-          <GroupSeparator />
-          <Button
-            onClick={() => setEditOpen(true)}
-            size="icon-xl"
-            title="Edit artifact"
-            variant="secondary"
-          >
-            <HugeiconsIcon icon={PencilLine} />
-          </Button>
-          <GroupSeparator />
-          <Button
-            className="border-none"
-            onClick={() => setDeleteOpen(true)}
-            size="icon-xl"
-            title="Delete artifact"
-            variant="destructive-outline"
-          >
-            <HugeiconsIcon icon={Delete02Icon} />
-          </Button>
-        </Group>
-      ) : (
-        <>
-          <MenuItem onClick={handleShareClick}>
-            <HugeiconsIcon icon={Share08Icon} />
-            Share
-          </MenuItem>
-          <MenuItem onClick={() => setEditOpen(true)}>
-            <HugeiconsIcon icon={PencilLine} />
-            Edit
-          </MenuItem>
-          <MenuItem onClick={() => setDeleteOpen(true)} variant="destructive">
-            <HugeiconsIcon icon={Delete02Icon} />
-            Delete
-          </MenuItem>
-          <MenuSeparator />
-        </>
-      )}
+    <ArtifactActionsContext.Provider
+      value={{
+        onDelete: () => setDeleteOpen(true),
+        onEdit: () => setEditOpen(true),
+        onShare: handleShareClick,
+      }}
+    >
+      {children}
       <Dialog onOpenChange={setShareOpen} open={shareOpen}>
         <DialogPopup>
           <DialogHeader>
@@ -427,6 +414,83 @@ export const ArtifactActions = ({
           </AlertDialogFooter>
         </AlertDialogPopup>
       </AlertDialog>
+    </ArtifactActionsContext.Provider>
+  );
+};
+
+export const ArtifactActionsToolbar = () => {
+  const { onDelete, onEdit, onShare } = useArtifactActions();
+
+  return (
+    <Group>
+      <Button
+        onClick={onShare}
+        size="icon-xl"
+        title="Share artifact"
+        variant="secondary"
+      >
+        <HugeiconsIcon icon={Share08Icon} />
+      </Button>
+      <GroupSeparator />
+      <Button
+        onClick={onEdit}
+        size="icon-xl"
+        title="Edit artifact"
+        variant="secondary"
+      >
+        <HugeiconsIcon icon={PencilLine} />
+      </Button>
+      <GroupSeparator />
+      <Button
+        className="border-none"
+        onClick={onDelete}
+        size="icon-xl"
+        title="Delete artifact"
+        variant="destructive-outline"
+      >
+        <HugeiconsIcon icon={Delete02Icon} />
+      </Button>
+    </Group>
+  );
+};
+
+export const ArtifactActionsMenuItems = () => {
+  const { onDelete, onEdit, onShare } = useArtifactActions();
+
+  return (
+    <>
+      <MenuItem closeOnClick={false} onClick={onShare}>
+        <HugeiconsIcon icon={Share08Icon} />
+        Share
+      </MenuItem>
+      <MenuItem closeOnClick={false} onClick={onEdit}>
+        <HugeiconsIcon icon={PencilLine} />
+        Edit
+      </MenuItem>
+      <MenuItem closeOnClick={false} onClick={onDelete} variant="destructive">
+        <HugeiconsIcon icon={Delete02Icon} />
+        Delete
+      </MenuItem>
+      <MenuSeparator />
     </>
   );
 };
+
+interface ArtifactActionsProps {
+  artifactId: string;
+  layout?: "toolbar" | "menu";
+}
+
+/** @deprecated Use ArtifactActionsProvider with ArtifactActionsToolbar or ArtifactActionsMenuItems */
+export const ArtifactActions = ({
+  artifactId,
+  layout = "toolbar",
+}: ArtifactActionsProps) => (
+  <ArtifactActionsProvider artifactId={artifactId}>
+    {layout === "toolbar" ? (
+      <ArtifactActionsToolbar />
+    ) : (
+      <ArtifactActionsMenuItems />
+    )}
+  </ArtifactActionsProvider>
+);

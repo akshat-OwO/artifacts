@@ -7,7 +7,11 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useMatch, useRouteContext } from "@tanstack/react-router";
 
-import { ArtifactActions } from "#/components/artifacts/artifact-actions";
+import {
+  ArtifactActionsMenuItems,
+  ArtifactActionsProvider,
+  ArtifactActionsToolbar,
+} from "#/components/artifacts/artifact-actions";
 import { ArtifactNavbar } from "#/components/artifacts/artifact-navbar";
 import { Logo } from "#/components/logo";
 import { ThemeToggle } from "#/components/theme-toggle";
@@ -23,7 +27,7 @@ import {
 } from "#/components/ui/menu";
 import { signInWithGoogle } from "#/lib/auth/sign-in";
 
-export const Navbar = () => {
+const NavbarContent = () => {
   const { session } = useRouteContext({ from: "__root__" });
 
   const artifactsListPage = useMatch({
@@ -74,9 +78,7 @@ export const Navbar = () => {
         <Group>
           {session ? (
             <>
-              {ownedArtifactId ? (
-                <ArtifactActions artifactId={ownedArtifactId} />
-              ) : null}
+              {ownedArtifactId ? <ArtifactActionsToolbar /> : null}
               <Group>
                 <Button
                   size="icon-xl"
@@ -127,12 +129,7 @@ export const Navbar = () => {
           <MenuPopup align="end" className="w-56">
             {session ? (
               <>
-                {ownedArtifactId ? (
-                  <ArtifactActions
-                    artifactId={ownedArtifactId}
-                    layout="menu"
-                  />
-                ) : null}
+                {ownedArtifactId ? <ArtifactActionsMenuItems /> : null}
                 <MenuLinkItem render={<Link to={browseLinkTarget} />}>
                   <HugeiconsIcon icon={BrowseIcon} />
                   {browseMenuLabel}
@@ -155,4 +152,22 @@ export const Navbar = () => {
       </Group>
     </nav>
   );
+};
+
+export const Navbar = () => {
+  const artifactMatch = useMatch({
+    from: "/_protected/a/$artifactId",
+    shouldThrow: false,
+  });
+  const ownedArtifactId = artifactMatch?.params?.artifactId;
+
+  if (ownedArtifactId) {
+    return (
+      <ArtifactActionsProvider artifactId={ownedArtifactId}>
+        <NavbarContent />
+      </ArtifactActionsProvider>
+    );
+  }
+
+  return <NavbarContent />;
 };
