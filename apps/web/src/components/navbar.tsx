@@ -50,6 +50,9 @@ export const Navbar = () => {
   const browseLinkLabel = artifactsListPage
     ? "Create an artifact"
     : "Browse your artifacts";
+  const browseMenuLabel = artifactsListPage
+    ? "Create artifact"
+    : "Browse artifacts";
   const BrowseIcon = artifactsListPage ? FilePlus : CodeFolderIcon;
 
   return (
@@ -132,7 +135,7 @@ export const Navbar = () => {
                 ) : null}
                 <MenuLinkItem render={<Link to={browseLinkTarget} />}>
                   <HugeiconsIcon icon={BrowseIcon} />
-                  {browseLinkLabel}
+                  {browseMenuLabel}
                 </MenuLinkItem>
                 <MenuItem>
                   <HugeiconsIcon icon={CogIcon} />

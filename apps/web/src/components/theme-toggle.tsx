@@ -22,7 +22,7 @@ export const ThemeToggle = ({ layout = "button" }: ThemeToggleProps) => {
     setTheme({ data: next }).then(() => router.invalidate());
   };
 
-  const label = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  const menuLabel = "Switch theme";
   const icon =
     theme === "dark" ? (
       <HugeiconsIcon icon={Moon02Icon} />
@@ -34,7 +34,7 @@ export const ThemeToggle = ({ layout = "button" }: ThemeToggleProps) => {
     return (
       <MenuItem onClick={toggleTheme}>
         {icon}
-        {label}
+        {menuLabel}
       </MenuItem>
     );
   }
