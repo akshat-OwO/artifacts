@@ -1,15 +1,27 @@
-import { CodeFolderIcon, CogIcon, FilePlus } from "@hugeicons/core-free-icons";
+import {
+  CodeFolderIcon,
+  CogIcon,
+  FilePlus,
+  Menu01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useMatch, useRouteContext } from "@tanstack/react-router";
 
+import { ArtifactActions } from "#/components/artifacts/artifact-actions";
+import { ArtifactNavbar } from "#/components/artifacts/artifact-navbar";
+import { Logo } from "#/components/logo";
+import { ThemeToggle } from "#/components/theme-toggle";
 import { Button } from "#/components/ui/button";
 import { Group, GroupSeparator } from "#/components/ui/group";
+import {
+  Menu,
+  MenuItem,
+  MenuLinkItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuTrigger,
+} from "#/components/ui/menu";
 import { signInWithGoogle } from "#/lib/auth/sign-in";
-
-import { ArtifactActions } from "./artifacts/artifact-actions";
-import { ArtifactNavbar } from "./artifacts/artifact-navbar";
-import { Logo } from "./logo";
-import { ThemeToggle } from "./theme-toggle";
 
 export const Navbar = () => {
   const { session } = useRouteContext({ from: "__root__" });
@@ -33,12 +45,20 @@ export const Navbar = () => {
     artifactMatch?.params?.artifactId ??
     sharedArtifactMatch?.params?.artifactId;
   const artifactVisibility = sharedArtifactMatch ? "public" : "owner";
+  const ownedArtifactId = artifactMatch?.params?.artifactId;
+  const browseLinkTarget = artifactsListPage ? "/" : "/artifacts";
+  const browseLinkLabel = artifactsListPage
+    ? "Create an artifact"
+    : "Browse your artifacts";
+  const BrowseIcon = artifactsListPage ? FilePlus : CodeFolderIcon;
 
   return (
-    <nav className="bg-background sticky top-0 z-20 flex items-center justify-between gap-4 px-2 py-2 pt-4 md:px-6">
-      <div className="flex items-center gap-4">
+    <nav className="bg-background sticky top-0 z-20 flex items-center justify-between gap-2 px-2 py-2 pt-4 md:gap-4 md:px-6">
+      <div className="flex min-w-0 items-center gap-2 md:gap-4">
         <Logo />
-        {artifactsListPage && <p className="font-semibold">Your artifacts</p>}
+        {artifactsListPage ? (
+          <p className="hidden font-semibold sm:block">Your artifacts</p>
+        ) : null}
         {activeArtifactId ? (
           <ArtifactNavbar
             artifactId={activeArtifactId}
@@ -46,29 +66,22 @@ export const Navbar = () => {
           />
         ) : null}
       </div>
-      <div className="flex items-center gap-2">
+
+      <div className="hidden shrink-0 items-center gap-2 md:flex">
         <Group>
-          {session && (
+          {session ? (
             <>
-              {artifactMatch?.params?.artifactId && (
-                <ArtifactActions artifactId={artifactMatch.params.artifactId} />
-              )}
+              {ownedArtifactId ? (
+                <ArtifactActions artifactId={ownedArtifactId} />
+              ) : null}
               <Group>
                 <Button
                   size="icon-xl"
-                  title={
-                    artifactsListPage
-                      ? "Create an artifact"
-                      : "Browse your artifacts"
-                  }
+                  title={browseLinkLabel}
                   variant="secondary"
-                  render={<Link to={artifactsListPage ? "/" : "/artifacts"} />}
+                  render={<Link to={browseLinkTarget} />}
                 >
-                  {artifactsListPage ? (
-                    <HugeiconsIcon icon={FilePlus} />
-                  ) : (
-                    <HugeiconsIcon icon={CodeFolderIcon} />
-                  )}
+                  <HugeiconsIcon icon={BrowseIcon} />
                 </Button>
                 <GroupSeparator />
                 <Button
@@ -80,20 +93,63 @@ export const Navbar = () => {
                 </Button>
               </Group>
             </>
-          )}
+          ) : null}
           <Group>
-            {!session && (
+            {!session ? (
               <>
                 <Button onClick={signInWithGoogle} size="xl">
                   Login
                 </Button>
                 <GroupSeparator />
               </>
-            )}
+            ) : null}
             <ThemeToggle />
           </Group>
         </Group>
       </div>
+
+      <Group aria-label="Navigation menu" className="shrink-0 md:hidden">
+        <Menu>
+          <MenuTrigger
+            render={
+              <Button
+                aria-label="Open navigation menu"
+                size="icon-xl"
+                variant="secondary"
+              />
+            }
+          >
+            <HugeiconsIcon icon={Menu01Icon} />
+          </MenuTrigger>
+          <MenuPopup align="end" className="w-56">
+            {session ? (
+              <>
+                {ownedArtifactId ? (
+                  <ArtifactActions
+                    artifactId={ownedArtifactId}
+                    layout="menu"
+                  />
+                ) : null}
+                <MenuLinkItem render={<Link to={browseLinkTarget} />}>
+                  <HugeiconsIcon icon={BrowseIcon} />
+                  {browseLinkLabel}
+                </MenuLinkItem>
+                <MenuItem>
+                  <HugeiconsIcon icon={CogIcon} />
+                  Settings
+                </MenuItem>
+                <MenuSeparator />
+              </>
+            ) : (
+              <>
+                <MenuItem onClick={signInWithGoogle}>Login</MenuItem>
+                <MenuSeparator />
+              </>
+            )}
+            <ThemeToggle layout="menu-item" />
+          </MenuPopup>
+        </Menu>
+      </Group>
     </nav>
   );
 };

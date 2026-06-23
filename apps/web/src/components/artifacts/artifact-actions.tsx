@@ -36,6 +36,7 @@ import {
   InputGroupInput,
 } from "#/components/ui/input-group";
 import { Input } from "#/components/ui/input";
+import { MenuItem, MenuSeparator } from "#/components/ui/menu";
 import { toastManager } from "#/components/ui/toast";
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
 import {
@@ -47,6 +48,7 @@ import type { UpdateArtifactInput } from "#/lib/queries/artifacts/mutations";
 
 interface ArtifactActionsProps {
   artifactId: string;
+  layout?: "toolbar" | "menu";
 }
 
 interface EditArtifactFormValues {
@@ -64,7 +66,10 @@ const getShareUrl = (artifactId: string) => {
 
 const ARTIFACT_SHARE_COPY_DEDUP_ID = "artifact-share-copy";
 
-export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
+export const ArtifactActions = ({
+  artifactId,
+  layout = "toolbar",
+}: ArtifactActionsProps) => {
   const nameInputId = useId();
   const shareUrlInputId = useId();
   const [editOpen, setEditOpen] = useState(false);
@@ -198,35 +203,53 @@ export const ArtifactActions = ({ artifactId }: ArtifactActionsProps) => {
 
   return (
     <>
-      <Group>
-        <Button
-          onClick={handleShareClick}
-          size="icon-xl"
-          title="Share artifact"
-          variant="secondary"
-        >
-          <HugeiconsIcon icon={Share08Icon} />
-        </Button>
-        <GroupSeparator />
-        <Button
-          onClick={() => setEditOpen(true)}
-          size="icon-xl"
-          title="Edit artifact"
-          variant="secondary"
-        >
-          <HugeiconsIcon icon={PencilLine} />
-        </Button>
-        <GroupSeparator />
-        <Button
-          className="border-none"
-          onClick={() => setDeleteOpen(true)}
-          size="icon-xl"
-          title="Delete artifact"
-          variant="destructive-outline"
-        >
-          <HugeiconsIcon icon={Delete02Icon} />
-        </Button>
-      </Group>
+      {layout === "toolbar" ? (
+        <Group>
+          <Button
+            onClick={handleShareClick}
+            size="icon-xl"
+            title="Share artifact"
+            variant="secondary"
+          >
+            <HugeiconsIcon icon={Share08Icon} />
+          </Button>
+          <GroupSeparator />
+          <Button
+            onClick={() => setEditOpen(true)}
+            size="icon-xl"
+            title="Edit artifact"
+            variant="secondary"
+          >
+            <HugeiconsIcon icon={PencilLine} />
+          </Button>
+          <GroupSeparator />
+          <Button
+            className="border-none"
+            onClick={() => setDeleteOpen(true)}
+            size="icon-xl"
+            title="Delete artifact"
+            variant="destructive-outline"
+          >
+            <HugeiconsIcon icon={Delete02Icon} />
+          </Button>
+        </Group>
+      ) : (
+        <>
+          <MenuItem onClick={handleShareClick}>
+            <HugeiconsIcon icon={Share08Icon} />
+            Share
+          </MenuItem>
+          <MenuItem onClick={() => setEditOpen(true)}>
+            <HugeiconsIcon icon={PencilLine} />
+            Edit
+          </MenuItem>
+          <MenuItem onClick={() => setDeleteOpen(true)} variant="destructive">
+            <HugeiconsIcon icon={Delete02Icon} />
+            Delete
+          </MenuItem>
+          <MenuSeparator />
+        </>
+      )}
       <Dialog onOpenChange={setShareOpen} open={shareOpen}>
         <DialogPopup>
           <DialogHeader>
