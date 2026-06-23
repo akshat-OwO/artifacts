@@ -1,5 +1,12 @@
 import { defineRelations, sql } from "drizzle-orm";
-import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { user } from "./auth.schema";
 
@@ -24,6 +31,7 @@ export const artifact = pgTable(
     artifactKey: text("artifact_key").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     id: uuid("id").defaultRandom().primaryKey(),
+    isPublic: boolean("is_public").default(false).notNull(),
     name: text("name").default(randomArtifactName).notNull(),
     previewKey: text("preview_key")
       .default(DEFAULT_ARTIFACT_PREVIEW_KEY)

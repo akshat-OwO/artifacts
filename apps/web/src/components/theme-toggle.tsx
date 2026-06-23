@@ -5,8 +5,13 @@ import { useRouteContext, useRouter } from "@tanstack/react-router";
 import { setTheme } from "#/lib/theme";
 
 import { Button } from "./ui/button";
+import { MenuItem } from "./ui/menu";
 
-export const ThemeToggle = () => {
+interface ThemeToggleProps {
+  layout?: "button" | "menu-item";
+}
+
+export const ThemeToggle = ({ layout = "button" }: ThemeToggleProps) => {
   const { theme } = useRouteContext({ from: "__root__" });
   const router = useRouter();
 
@@ -17,6 +22,23 @@ export const ThemeToggle = () => {
     setTheme({ data: next }).then(() => router.invalidate());
   };
 
+  const menuLabel = "Switch theme";
+  const icon =
+    theme === "dark" ? (
+      <HugeiconsIcon icon={Moon02Icon} />
+    ) : (
+      <HugeiconsIcon icon={Sun01Icon} className="stroke-primary-foreground" />
+    );
+
+  if (layout === "menu-item") {
+    return (
+      <MenuItem onClick={toggleTheme}>
+        {icon}
+        {menuLabel}
+      </MenuItem>
+    );
+  }
+
   return (
     <Button
       size="icon-xl"
@@ -24,10 +46,7 @@ export const ThemeToggle = () => {
       aria-label="Toggle theme"
       onClick={toggleTheme}
     >
-      {theme === "dark" && <HugeiconsIcon icon={Moon02Icon} />}
-      {theme === "light" && (
-        <HugeiconsIcon icon={Sun01Icon} className="stroke-primary-foreground" />
-      )}
+      {icon}
     </Button>
   );
 };
