@@ -7,11 +7,17 @@ import { ArtifactPreviewLoader } from "#/components/artifacts/artifact-preview-l
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
 import { artifactPageHead } from "#/lib/seo";
 
+interface ArtifactRouteHeadData {
+  artifact?: {
+    name: string;
+  };
+}
+
 const RouteComponent = () => {
   const { artifactId } = Route.useParams();
 
   return (
-    <div className="h-full">
+    <div className="h-full overflow-hidden">
       <Suspense fallback={<ArtifactPreviewLoader />}>
         <ArtifactPreview artifactId={artifactId} />
       </Suspense>
@@ -22,6 +28,10 @@ const RouteComponent = () => {
 export const Route = createFileRoute("/_protected/a/$artifactId")({
   component: RouteComponent,
   errorComponent: ArtifactPreviewError,
+  head: ({ loaderData }: { loaderData?: ArtifactRouteHeadData | undefined }) =>
+    artifactPageHead({
+      name: loaderData?.artifact?.name ?? "Artifact",
+    }),
   loader: async ({ context: { queryClient }, params: { artifactId } }) => {
     const artifact = await queryClient.ensureQueryData(
       getArtifactByIdOptions(artifactId)
@@ -29,8 +39,4 @@ export const Route = createFileRoute("/_protected/a/$artifactId")({
 
     return { artifact };
   },
-  head: ({ loaderData }) =>
-    artifactPageHead({
-      name: loaderData?.artifact.name ?? "Artifact",
-    }),
 });

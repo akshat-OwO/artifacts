@@ -1,12 +1,15 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 
 import { Navbar } from "#/components/navbar";
+import { ScrollArea } from "#/components/ui/scroll-area";
 
 const RouteComponent = () => (
-  <div className="flex h-screen flex-col">
+  <div className="flex h-dvh flex-col overflow-hidden">
     <Navbar />
-    <div className="border-primary mx-2 my-4 flex-1 rounded-md border md:mx-6">
-      <Outlet />
+    <div className="border-primary bg-background mx-2 my-4 min-h-0 flex-1 overflow-hidden rounded-md border md:mx-6">
+      <ScrollArea fill>
+        <Outlet />
+      </ScrollArea>
     </div>
   </div>
 );
