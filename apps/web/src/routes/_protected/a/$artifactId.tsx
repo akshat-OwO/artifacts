@@ -5,6 +5,7 @@ import { ArtifactPreview } from "#/components/artifacts/artifact-preview";
 import { ArtifactPreviewError } from "#/components/artifacts/artifact-preview-error";
 import { ArtifactPreviewLoader } from "#/components/artifacts/artifact-preview-loader";
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
+import { createPageHead, pageTitle } from "#/lib/seo";
 
 const RouteComponent = () => {
   const { artifactId } = Route.useParams();
@@ -22,6 +23,22 @@ export const Route = createFileRoute("/_protected/a/$artifactId")({
   component: RouteComponent,
   errorComponent: ArtifactPreviewError,
   loader: async ({ context: { queryClient }, params: { artifactId } }) => {
-    await queryClient.ensureQueryData(getArtifactByIdOptions(artifactId));
+    const artifact = await queryClient.ensureQueryData(
+      getArtifactByIdOptions(artifactId)
+    );
+
+    return { artifact };
+  },
+  head: ({ loaderData }) => {
+    const title = loaderData
+      ? pageTitle(loaderData.artifact.name)
+      : pageTitle("Artifact");
+
+    return createPageHead({
+      description: loaderData
+        ? `Preview and share the "${loaderData.artifact.name}" artifact.`
+        : "Preview and share an HTML artifact.",
+      title,
+    });
   },
 });
