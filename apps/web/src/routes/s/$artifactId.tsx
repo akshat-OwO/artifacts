@@ -6,6 +6,7 @@ import { ArtifactPreviewLoader } from "#/components/artifacts/artifact-preview-l
 import { PublicArtifactPreview } from "#/components/artifacts/public-artifact-preview";
 import { Navbar } from "#/components/navbar";
 import { getPublicArtifactByIdOptions } from "#/lib/queries/artifacts/get-public-by-id";
+import { artifactPageHead } from "#/lib/seo";
 
 const RouteComponent = () => {
   const { artifactId } = Route.useParams();
@@ -26,6 +27,18 @@ export const Route = createFileRoute("/s/$artifactId")({
   component: RouteComponent,
   errorComponent: ArtifactPreviewError,
   loader: async ({ context: { queryClient }, params: { artifactId } }) => {
-    await queryClient.ensureQueryData(getPublicArtifactByIdOptions(artifactId));
+    const artifact = await queryClient.ensureQueryData(
+      getPublicArtifactByIdOptions(artifactId)
+    );
+
+    return { artifact };
   },
+  head: ({ loaderData }) =>
+    artifactPageHead({
+      ...(loaderData?.artifact.author
+        ? { author: loaderData.artifact.author }
+        : {}),
+      name: loaderData?.artifact.name ?? "Artifact",
+      shared: true,
+    }),
 });

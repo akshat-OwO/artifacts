@@ -14,6 +14,28 @@ interface PageHeadOptions {
   description?: string;
 }
 
+export const artifactPageHead = ({
+  author,
+  name,
+  shared = false,
+}: {
+  author?: string;
+  name: string;
+  shared?: boolean;
+}) => {
+  const title = pageTitle(name);
+  const description = shared
+    ? author
+      ? `View the shared "${name}" artifact by ${author}.`
+      : `View the shared "${name}" artifact.`
+    : `Preview and share the "${name}" artifact.`;
+
+  return createPageHead({
+    description,
+    title,
+  });
+};
+
 export const createPageHead = ({ title, description }: PageHeadOptions) => ({
   meta: [
     { title },
