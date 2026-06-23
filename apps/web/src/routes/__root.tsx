@@ -10,6 +10,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { AnchoredToastProvider, ToastProvider } from "#/components/ui/toast";
 import { getSessionQueryOptions } from "#/lib/auth/queries";
+import { DEFAULT_DESCRIPTION, SITE_NAME } from "#/lib/seo";
 import { getTheme } from "#/lib/theme";
 
 import appCss from "../styles.css?url";
@@ -78,7 +79,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         name: "viewport",
       },
       {
-        title: "Artifacts",
+        title: SITE_NAME,
+      },
+      {
+        content: DEFAULT_DESCRIPTION,
+        name: "description",
+      },
+      {
+        content: SITE_NAME,
+        property: "og:site_name",
       },
     ],
   }),
