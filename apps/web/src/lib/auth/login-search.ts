@@ -1,4 +1,3 @@
-import type { SearchSchemaInput } from "@tanstack/react-router";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -18,38 +17,12 @@ export const loginSearchDefaults = {
   login: false,
 } as const;
 
-const loginSearchParser = Schema.Struct({
+export const loginSearchSchema = Schema.Struct({
   login: Schema.Boolean.pipe(
     Schema.optional,
     Schema.withDecodingDefaultType(Effect.succeed(loginSearchDefaults.login)),
   ),
   redirectTo: Schema.optionalKey(Schema.String),
-});
+}).pipe(Schema.toStandardSchemaV1);
 
-type ParsedLoginSearch = Schema.Schema.Type<typeof loginSearchParser>;
-
-export type LoginSearch = {
-  login?: boolean;
-  redirectTo?: string;
-};
-
-const toLoginSearch = ({ login, redirectTo }: ParsedLoginSearch): LoginSearch => {
-  const safeRedirectTo = redirectTo
-    ? getSafeRedirectPath(redirectTo)
-    : undefined;
-
-  return {
-    ...(login ? { login: true } : {}),
-    ...(safeRedirectTo ? { redirectTo: safeRedirectTo } : {}),
-  };
-};
-
-export const validateLoginSearch = (
-  search: Record<string, unknown> & SearchSchemaInput,
-): LoginSearch => {
-  try {
-    return toLoginSearch(Schema.decodeUnknownSync(loginSearchParser)(search));
-  } catch {
-    return {};
-  }
-};
+export type LoginSearch = Schema.Schema.Type<typeof loginSearchSchema>;

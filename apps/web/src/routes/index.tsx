@@ -6,8 +6,9 @@ import {
 
 import { Footer } from "#/components/footer";
 import {
+  getSafeRedirectPath,
   loginSearchDefaults,
-  validateLoginSearch,
+  loginSearchSchema,
 } from "#/lib/auth/login-search";
 import { createPageHead, DEFAULT_DESCRIPTION, HOME_PAGE_TITLE } from "#/lib/seo";
 import { Navbar } from "#/components/navbar";
@@ -23,8 +24,12 @@ const Home = () => (
 
 export const Route = createFileRoute("/")({
   beforeLoad: ({ context: { session }, search }) => {
-    if (session && search.redirectTo) {
-      throw redirect({ to: search.redirectTo });
+    const redirectTo = search.redirectTo
+      ? getSafeRedirectPath(search.redirectTo)
+      : undefined;
+
+    if (session && redirectTo) {
+      throw redirect({ to: redirectTo });
     }
   },
   component: Home,
@@ -36,5 +41,5 @@ export const Route = createFileRoute("/")({
   search: {
     middlewares: [stripSearchParams(loginSearchDefaults)],
   },
-  validateSearch: validateLoginSearch,
+  validateSearch: loginSearchSchema,
 });
