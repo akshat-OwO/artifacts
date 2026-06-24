@@ -102,7 +102,7 @@ const NavbarContent = () => {
           <Group>
             {!session ? (
               <>
-                <Button onClick={signInWithGoogle} size="xl">
+                <Button onClick={() => signInWithGoogle()} size="xl">
                   Login
                 </Button>
                 <GroupSeparator />
@@ -142,7 +142,7 @@ const NavbarContent = () => {
               </>
             ) : (
               <>
-                <MenuItem onClick={signInWithGoogle}>Login</MenuItem>
+                <MenuItem onClick={() => signInWithGoogle()}>Login</MenuItem>
                 <MenuSeparator />
               </>
             )}

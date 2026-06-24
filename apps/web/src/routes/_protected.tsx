@@ -2,6 +2,7 @@ import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 
 import { Navbar } from "#/components/navbar";
 import { ScrollArea } from "#/components/ui/scroll-area";
+import { getSafeRedirectPath } from "#/lib/auth/login-search";
 
 const RouteComponent = () => (
   <div className="flex h-dvh flex-col overflow-hidden">
@@ -15,9 +16,19 @@ const RouteComponent = () => (
 );
 
 export const Route = createFileRoute("/_protected")({
-  beforeLoad: ({ context: { session } }) => {
+  beforeLoad: ({ context: { session }, location }) => {
     if (!session) {
-      throw redirect({ to: "/" });
+      const redirectTo = getSafeRedirectPath(
+        `${location.pathname}${location.search}${location.hash}`,
+      );
+
+      throw redirect({
+        search: {
+          login: true,
+          ...(redirectTo ? { redirectTo } : {}),
+        },
+        to: "/",
+      });
     }
   },
   component: RouteComponent,
