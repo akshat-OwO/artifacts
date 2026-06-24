@@ -1,15 +1,6 @@
-import {
-  createFileRoute,
-  redirect,
-  stripSearchParams,
-} from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { Footer } from "#/components/footer";
-import {
-  getSafeRedirectPath,
-  loginSearchDefaults,
-  loginSearchSchema,
-} from "#/lib/auth/login-search";
 import { createPageHead, DEFAULT_DESCRIPTION, HOME_PAGE_TITLE } from "#/lib/seo";
 import { Navbar } from "#/components/navbar";
 import { Uploader } from "#/components/uploader";
@@ -23,23 +14,10 @@ const Home = () => (
 );
 
 export const Route = createFileRoute("/")({
-  beforeLoad: ({ context: { session }, search }) => {
-    const redirectTo = search.redirectTo
-      ? getSafeRedirectPath(search.redirectTo)
-      : undefined;
-
-    if (session && redirectTo) {
-      throw redirect({ to: redirectTo });
-    }
-  },
   component: Home,
   head: () =>
     createPageHead({
       description: DEFAULT_DESCRIPTION,
       title: HOME_PAGE_TITLE,
     }),
-  search: {
-    middlewares: [stripSearchParams(loginSearchDefaults)],
-  },
-  validateSearch: loginSearchSchema,
 });

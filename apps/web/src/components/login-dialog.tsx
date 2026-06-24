@@ -12,7 +12,7 @@ import { signInWithGoogle } from "#/lib/auth/sign-in";
 interface LoginDialogProps {
   onOpenChange: (open: boolean) => void;
   open: boolean;
-  redirectTo?: string;
+  redirectTo: string | undefined;
 }
 
 export const LoginDialog = ({
@@ -32,15 +32,7 @@ export const LoginDialog = ({
         <Button onClick={() => onOpenChange(false)} variant="outline">
           Cancel
         </Button>
-        <Button
-          onClick={() =>
-            signInWithGoogle(
-              redirectTo === undefined ? undefined : { redirectTo },
-            )
-          }
-        >
-          Login
-        </Button>
+        <Button onClick={() => signInWithGoogle(redirectTo)}>Login</Button>
       </DialogFooter>
     </DialogPopup>
   </Dialog>

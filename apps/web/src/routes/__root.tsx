@@ -7,6 +7,7 @@ import {
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import * as Schema from "effect/Schema";
 
 import { AnchoredToastProvider, ToastProvider } from "#/components/ui/toast";
 import { getSessionQueryOptions } from "#/lib/auth/queries";
@@ -53,6 +54,11 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const loginSearchSchema = Schema.Struct({
+  login: Schema.optional(Schema.Boolean),
+  redirectTo: Schema.optional(Schema.String),
+}).pipe(Schema.toStandardSchemaV1);
+
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   beforeLoad: async ({ context: { queryClient } }) => {
     const session = await queryClient.ensureQueryData(getSessionQueryOptions);
@@ -92,4 +98,5 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
   }),
   shellComponent: RootDocument,
+  validateSearch: loginSearchSchema,
 });
