@@ -15,9 +15,15 @@ const RouteComponent = () => (
 );
 
 export const Route = createFileRoute("/_protected")({
-  beforeLoad: ({ context: { session } }) => {
+  beforeLoad: ({ context: { session }, location }) => {
     if (!session) {
-      throw redirect({ to: "/" });
+      throw redirect({
+        search: {
+          login: true,
+          redirectTo: encodeURIComponent(location.pathname),
+        },
+        to: "/",
+      });
     }
   },
   component: RouteComponent,
