@@ -1,7 +1,7 @@
 import { FileCode, Plus } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
-import { useRouteContext, useSearch } from "@tanstack/react-router";
+import { getRouteApi, useRouteContext } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
@@ -9,17 +9,19 @@ import { LoginDialog } from "#/components/login-dialog";
 import { Spinner } from "#/components/ui/spinner";
 import { uploadArtifactsMutations } from "#/lib/queries/upload/artifacts";
 
+const homeRouteApi = getRouteApi("/");
+
 export const Uploader = () => {
   const { session } = useRouteContext({ from: "__root__" });
-  const search = useSearch({ from: "/" });
+  const { login, redirectTo } = homeRouteApi.useSearch();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const { mutate: upload, isPending } = useMutation(uploadArtifactsMutations());
 
   useEffect(() => {
-    if (search.login && !session) {
+    if (login && !session) {
       setLoginDialogOpen(true);
     }
-  }, [search.login, session]);
+  }, [login, session]);
 
   const { acceptedFiles, getRootProps, getInputProps, isDragActive } =
     useDropzone({
@@ -81,7 +83,7 @@ export const Uploader = () => {
       <LoginDialog
         onOpenChange={setLoginDialogOpen}
         open={loginDialogOpen}
-        {...(search.redirectTo ? { redirectTo: search.redirectTo } : {})}
+        {...(redirectTo ? { redirectTo } : {})}
       />
     </>
   );

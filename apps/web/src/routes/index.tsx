@@ -1,7 +1,14 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  redirect,
+  stripSearchParams,
+} from "@tanstack/react-router";
 
 import { Footer } from "#/components/footer";
-import { parseLoginSearch } from "#/lib/auth/login-search";
+import {
+  loginSearchDefaults,
+  validateLoginSearch,
+} from "#/lib/auth/login-search";
 import { createPageHead, DEFAULT_DESCRIPTION, HOME_PAGE_TITLE } from "#/lib/seo";
 import { Navbar } from "#/components/navbar";
 import { Uploader } from "#/components/uploader";
@@ -21,10 +28,13 @@ export const Route = createFileRoute("/")({
     }
   },
   component: Home,
-  validateSearch: parseLoginSearch,
   head: () =>
     createPageHead({
       description: DEFAULT_DESCRIPTION,
       title: HOME_PAGE_TITLE,
     }),
+  search: {
+    middlewares: [stripSearchParams(loginSearchDefaults)],
+  },
+  validateSearch: validateLoginSearch,
 });
