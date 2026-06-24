@@ -1,7 +1,7 @@
 import { FileCode, Plus } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMutation } from "@tanstack/react-query";
-import { useRouteContext } from "@tanstack/react-router";
+import { useRouteContext, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 
@@ -11,6 +11,7 @@ import { uploadArtifactsMutations } from "#/lib/queries/upload/artifacts";
 
 export const Uploader = () => {
   const { session } = useRouteContext({ from: "__root__" });
+  const { login, redirectTo } = useSearch({ from: "__root__" });
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const { mutate: upload, isPending } = useMutation(uploadArtifactsMutations());
 
@@ -71,7 +72,11 @@ export const Uploader = () => {
           </div>
         </div>
       </div>
-      <LoginDialog onOpenChange={setLoginDialogOpen} open={loginDialogOpen} />
+      <LoginDialog
+        redirectTo={redirectTo}
+        onOpenChange={setLoginDialogOpen}
+        open={loginDialogOpen || Boolean(login)}
+      />
     </>
   );
 };
