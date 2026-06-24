@@ -1,5 +1,6 @@
 import type { SearchSchemaInput } from "@tanstack/react-router";
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 export const getSafeRedirectPath = (path: string): string | undefined => {
   if (!path.startsWith("/") || path.startsWith("//")) {
@@ -17,27 +18,38 @@ export const loginSearchDefaults = {
   login: false,
 } as const;
 
-const loginSearchParser = z.object({
-  login: z.boolean().catch(loginSearchDefaults.login),
-  redirectTo: z.string().optional(),
+const loginSearchParser = Schema.Struct({
+  login: Schema.Boolean.pipe(
+    Schema.optional,
+    Schema.withDecodingDefaultType(Effect.succeed(loginSearchDefaults.login)),
+  ),
+  redirectTo: Schema.optionalKey(Schema.String),
 });
+
+type ParsedLoginSearch = Schema.Schema.Type<typeof loginSearchParser>;
 
 export type LoginSearch = {
   login?: boolean;
   redirectTo?: string;
 };
 
-export const validateLoginSearch = (
-  search: Record<string, unknown> & SearchSchemaInput,
-): LoginSearch => {
-  const parsed = loginSearchParser.parse(search);
-
-  const redirectTo = parsed.redirectTo
-    ? getSafeRedirectPath(parsed.redirectTo)
+const toLoginSearch = ({ login, redirectTo }: ParsedLoginSearch): LoginSearch => {
+  const safeRedirectTo = redirectTo
+    ? getSafeRedirectPath(redirectTo)
     : undefined;
 
   return {
-    ...(parsed.login ? { login: true } : {}),
-    ...(redirectTo ? { redirectTo } : {}),
+    ...(login ? { login: true } : {}),
+    ...(safeRedirectTo ? { redirectTo: safeRedirectTo } : {}),
   };
+};
+
+export const validateLoginSearch = (
+  search: Record<string, unknown> & SearchSchemaInput,
+): LoginSearch => {
+  try {
+    return toLoginSearch(Schema.decodeUnknownSync(loginSearchParser)(search));
+  } catch {
+    return {};
+  }
 };
