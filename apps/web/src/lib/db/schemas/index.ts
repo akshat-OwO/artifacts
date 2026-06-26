@@ -1,5 +1,6 @@
 export {
   account,
+  deviceCode,
   session,
   authRelations,
   user,

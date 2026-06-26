@@ -100,14 +100,19 @@ const NavbarContent = () => {
             </>
           ) : null}
           <Group>
-            {!session ? (
+            {session ? null : (
               <>
-                <Button onClick={signInWithGoogle} size="xl">
+                <Button
+                  onClick={() => {
+                    void signInWithGoogle();
+                  }}
+                  size="xl"
+                >
                   Login
                 </Button>
                 <GroupSeparator />
               </>
-            ) : null}
+            )}
             <ThemeToggle />
           </Group>
         </Group>
@@ -142,7 +147,13 @@ const NavbarContent = () => {
               </>
             ) : (
               <>
-                <MenuItem onClick={signInWithGoogle}>Login</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    void signInWithGoogle();
+                  }}
+                >
+                  Login
+                </MenuItem>
                 <MenuSeparator />
               </>
             )}

@@ -28,6 +28,7 @@
   "catalog": {
     "@effect/platform-bun": "4.0.0-beta.85",
     "@effect/sql-pg": "4.0.0-beta.85",
+    "better-auth": "^1.6.18",
     "effect": "4.0.0-beta.85"
   }
 }

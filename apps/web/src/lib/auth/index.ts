@@ -1,11 +1,13 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth/minimal";
+import { bearer, deviceAuthorization } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { drizzle } from "drizzle-orm/node-postgres";
 
 import {
-  user,
   account,
+  deviceCode,
+  user,
   session,
   verification,
   authRelations,
@@ -17,9 +19,16 @@ export const auth = betterAuth({
   baseURL: Bun.env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, {
     provider: "pg",
-    schema: { account, session, user, verification },
+    schema: { account, deviceCode, session, user, verification },
   }),
-  plugins: [tanstackStartCookies()],
+  plugins: [
+    bearer(),
+    deviceAuthorization({
+      schema: {},
+      verificationUri: "/auth/device",
+    }),
+    tanstackStartCookies(),
+  ],
   session: {
     cookieCache: {
       enabled: true,

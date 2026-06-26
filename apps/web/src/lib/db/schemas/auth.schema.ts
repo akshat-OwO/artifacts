@@ -1,5 +1,12 @@
 import { defineRelations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  integer,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   createdAt: timestamp("created_at").notNull(),
@@ -71,7 +78,26 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 );
 
-const authSchema = { account, session, user, verification };
+export const deviceCode = pgTable("device_code", {
+  clientId: text("client_id"),
+  deviceCode: text("device_code").notNull(),
+  expiresAt: timestamp("expires_at", {
+    precision: 6,
+    withTimezone: true,
+  }).notNull(),
+  id: text("id").primaryKey(),
+  lastPolledAt: timestamp("last_polled_at", {
+    precision: 6,
+    withTimezone: true,
+  }),
+  pollingInterval: integer("polling_interval"),
+  scope: text("scope"),
+  status: text("status").notNull(),
+  userCode: text("user_code").notNull(),
+  userId: text("user_id"),
+});
+
+const authSchema = { account, deviceCode, session, user, verification };
 
 export const authRelations = defineRelations(authSchema, (r) => ({
   account: {
