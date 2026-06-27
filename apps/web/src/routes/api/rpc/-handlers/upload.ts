@@ -12,10 +12,18 @@ import {
   MAX_FILE_SIZE,
 } from "#/lib/errors/upload/file-size";
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
+import { InvalidFileTypeError } from "#/lib/errors/upload/invalid-file";
 import { ScoutApiLive, ScoutApiService } from "#/lib/scout";
 import { Storage, StorageLive } from "#/lib/storage";
 
 import { Api } from "../-api";
+
+const HTML_FILE_TYPES = new Set(["text/html", "application/xhtml+xml"]);
+
+const isHtmlFile = (file: File): boolean =>
+  HTML_FILE_TYPES.has(file.type) ||
+  file.name.endsWith(".html") ||
+  file.name.endsWith(".htm");
 
 export const UploadApiHandler = HttpApiBuilder.group(
   Api,
@@ -24,6 +32,7 @@ export const UploadApiHandler = HttpApiBuilder.group(
     handlers.handle("uploadArtifacts", ({ payload }) =>
       Effect.gen(function* handle() {
         const { file } = payload;
+        const name = payload.name?.trim();
         const storage = yield* Storage;
 
         const user = yield* AuthUser;
@@ -33,6 +42,10 @@ export const UploadApiHandler = HttpApiBuilder.group(
             actualBytes: file.size,
             maximumBytes: MAX_FILE_SIZE,
           });
+        }
+
+        if (!isHtmlFile(file)) {
+          return yield* new InvalidFileTypeError();
         }
 
         const artifactId = crypto.randomUUID();
@@ -52,6 +65,7 @@ export const UploadApiHandler = HttpApiBuilder.group(
         yield* db.insert(artifact).values({
           artifactKey: uploadedFile.key,
           id: artifactId,
+          ...(name ? { name } : {}),
           userId: user.id,
         });
 

@@ -1,8 +1,12 @@
 import { formatDistanceToNow } from "date-fns";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Argument from "effect/unstable/cli/Argument";
+import * as CliError from "effect/unstable/cli/CliError";
 import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag";
+import * as Prompt from "effect/unstable/cli/Prompt";
 
 import { ApiClient } from "../services/api-client";
 
@@ -88,3 +92,97 @@ export const getArtifactCommand = Command.make(
     yield* Console.log(apiClient.artifactUrl(artifact.id));
   })
 ).pipe(Command.withDescription("Get an artifact URL"));
+
+export const deleteArtifactCommand = Command.make(
+  "delete",
+  {
+    id: Argument.string("id").pipe(Argument.withDescription("The artifact id")),
+    no: Flag.boolean("no").pipe(
+      Flag.withAlias("n"),
+      Flag.withDescription("Cancel without prompting")
+    ),
+    yes: Flag.boolean("yes").pipe(
+      Flag.withAlias("y"),
+      Flag.withDescription("Delete without prompting")
+    ),
+  },
+  Effect.fnUntraced(function* handler({ id, no, yes }) {
+    if (yes && no) {
+      return yield* new CliError.ShowHelp({
+        commandPath: ["artifacts", "delete"],
+        errors: [
+          new CliError.InvalidValue({
+            expected: "pass only one of --yes or --no",
+            kind: "flag",
+            option: "yes",
+            value: "true",
+          }),
+        ],
+      });
+    }
+
+    const shouldDelete =
+      yes ||
+      (!no &&
+        (yield* Prompt.select({
+          choices: [
+            { title: "Yes", value: true },
+            { title: "No", value: false },
+          ],
+          message: `Delete artifact ${id}?`,
+        })));
+
+    if (!shouldDelete) {
+      yield* Console.log("Delete cancelled.");
+      return;
+    }
+
+    const apiClient = yield* ApiClient;
+    yield* apiClient.deleteArtifact(id);
+    yield* Console.log("Artifact deleted.");
+  })
+).pipe(Command.withDescription("Delete an artifact"));
+
+export const updateArtifactCommand = Command.make(
+  "update",
+  {
+    id: Argument.string("id").pipe(Argument.withDescription("The artifact id")),
+    name: Flag.string("name").pipe(
+      Flag.withDescription("The new artifact name"),
+      Flag.optional
+    ),
+    path: Flag.path("path", { mustExist: true, pathType: "file" }).pipe(
+      Flag.withDescription("The HTML file path to replace the artifact with"),
+      Flag.optional
+    ),
+  },
+  Effect.fnUntraced(function* handler(
+    { id, name, path },
+    commandPath?: readonly string[]
+  ) {
+    const filePath = Option.getOrUndefined(path);
+    const artifactName = Option.getOrUndefined(name);
+
+    if (!filePath && !artifactName) {
+      return yield* new CliError.ShowHelp({
+        commandPath: [...(commandPath ?? ["artifacts", "update"])],
+        errors: [
+          new CliError.InvalidValue({
+            expected: "pass --path, --name, or both",
+            kind: "flag",
+            option: "path",
+            value: "",
+          }),
+        ],
+      });
+    }
+
+    const apiClient = yield* ApiClient;
+    const artifact = yield* apiClient.updateArtifact(id, {
+      name: artifactName,
+      path: filePath,
+    });
+
+    yield* Console.log(apiClient.artifactUrl(artifact.id));
+  })
+).pipe(Command.withDescription("Update an artifact"));

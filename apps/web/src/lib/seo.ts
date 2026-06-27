@@ -25,9 +25,7 @@ export const artifactPageHead = ({
 }) => {
   const title = pageTitle(name);
   const description = shared
-    ? author
-      ? `View the shared "${name}" artifact by ${author}.`
-      : `View the shared "${name}" artifact.`
+    ? `View the shared "${name}" artifact${author ? `by ${author}.` : "."}`
     : `Preview and share the "${name}" artifact.`;
 
   return createPageHead({
@@ -39,16 +37,16 @@ export const artifactPageHead = ({
 export const createPageHead = ({ title, description }: PageHeadOptions) => ({
   meta: [
     { title },
-    ...(description ? [{ name: "description", content: description }] : []),
-    { property: "og:title", content: title },
+    ...(description ? [{ content: description, name: "description" }] : []),
+    { content: title, property: "og:title" },
     ...(description
-      ? [{ property: "og:description", content: description }]
+      ? [{ content: description, property: "og:description" }]
       : []),
-    { property: "og:site_name", content: SITE_NAME },
-    { name: "twitter:card", content: "summary" },
-    { name: "twitter:title", content: title },
+    { content: SITE_NAME, property: "og:site_name" },
+    { content: "summary", name: "twitter:card" },
+    { content: title, name: "twitter:title" },
     ...(description
-      ? [{ name: "twitter:description", content: description }]
+      ? [{ content: description, name: "twitter:description" }]
       : []),
   ],
 });

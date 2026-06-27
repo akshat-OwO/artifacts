@@ -25,11 +25,7 @@ export const ArtifactFrame = ({
     visibility === "public"
       ? getPublicArtifactPreviewByKeyOptions(artifactId, artifactKey)
       : getArtifactPreviewByKeyOptions(artifactId, artifactKey);
-  const {
-    data: url,
-    error,
-    isLoading,
-  } = useQuery(previewOptions);
+  const { data: url, error, isLoading } = useQuery(previewOptions);
 
   useEffect(() => {
     if (!url) {

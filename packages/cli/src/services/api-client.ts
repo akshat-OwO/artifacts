@@ -18,6 +18,11 @@ import { UserConfig } from "./user-config";
 const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/a/${artifactId}`;
 
+interface UpdateArtifactInput {
+  readonly name?: string;
+  readonly path?: string;
+}
+
 export class ApiClient extends Context.Service<ApiClient>()(
   "@artifacts/cli/services/apiClient",
   {
@@ -61,15 +66,44 @@ export class ApiClient extends Context.Service<ApiClient>()(
         }
       );
 
-      const uploadArtifact = Effect.fn("@artifacts/cli/helpers/uploadArtifact")(
-        function* uploadArtifactHandler(filePath: string) {
+      const deleteArtifact = Effect.fn("@artifacts/cli/helpers/deleteArtifact")(
+        function* deleteArtifactHandler(artifactId: string) {
+          return yield* client.artifacts.deleteArtifact({
+            params: { artifactId },
+          });
+        }
+      );
+
+      const fileFromPath = Effect.fn("@artifacts/cli/helpers/fileFromPath")(
+        function* fileFromPathHandler(filePath: string) {
           const fileBytes = yield* fs.readFile(filePath);
-          const file = new File([fileBytes], nodePath.basename(filePath), {
+
+          return new File([fileBytes], nodePath.basename(filePath), {
             type: "text/html",
           });
+        }
+      );
+
+      const uploadArtifact = Effect.fn("@artifacts/cli/helpers/uploadArtifact")(
+        function* uploadArtifactHandler(filePath: string, name?: string) {
+          const file = yield* fileFromPath(filePath);
 
           return yield* client.upload.uploadArtifacts({
-            payload: { file },
+            payload: { file, name },
+          });
+        }
+      );
+
+      const updateArtifact = Effect.fn("@artifacts/cli/helpers/updateArtifact")(
+        function* updateArtifactHandler(
+          artifactId: string,
+          input: UpdateArtifactInput
+        ) {
+          const file = input.path ? yield* fileFromPath(input.path) : undefined;
+
+          return yield* client.artifacts.updateArtifact({
+            params: { artifactId },
+            payload: { file, name: input.name },
           });
         }
       );
@@ -77,9 +111,11 @@ export class ApiClient extends Context.Service<ApiClient>()(
       return {
         artifactUrl: (artifactId: string) =>
           getArtifactUrl(baseUrl, artifactId),
+        deleteArtifact,
         getArtifact,
         getArtifacts,
         healthCheck,
+        updateArtifact,
         uploadArtifact,
       };
     }).pipe(Effect.provide(FetchHttpClient.layer)),

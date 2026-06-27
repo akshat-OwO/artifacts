@@ -134,13 +134,7 @@ const logoutAuthCmd = Command.make(
   })
 ).pipe(Command.withDescription("Logout from the Artifacts CLI"));
 
-export const authCommand = Command.make(
-  "auth",
-  {},
-  Effect.fnUntraced(function* handler() {
-    yield* Effect.log("Auth cli");
-  })
-).pipe(
+export const authCommand = Command.make("auth").pipe(
   Command.withDescription("Authenticate with the Artifacts CLI"),
   Command.withSubcommands([loginAuthCmd, authWhoAmiCmd, logoutAuthCmd])
 );

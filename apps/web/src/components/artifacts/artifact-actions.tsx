@@ -8,13 +8,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type React from "react";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useId,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useId, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 import {
@@ -36,12 +30,12 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { Group, GroupSeparator } from "#/components/ui/group";
+import { Input } from "#/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "#/components/ui/input-group";
-import { Input } from "#/components/ui/input";
 import { MenuItem, MenuSeparator } from "#/components/ui/menu";
 import { toastManager } from "#/components/ui/toast";
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
@@ -277,7 +271,10 @@ export const ArtifactActionsProvider = ({
           </DialogFooter>
         </DialogPopup>
       </Dialog>
-      <AlertDialog onOpenChange={setConfirmPrivateOpen} open={confirmPrivateOpen}>
+      <AlertDialog
+        onOpenChange={setConfirmPrivateOpen}
+        open={confirmPrivateOpen}
+      >
         <AlertDialogPopup>
           <AlertDialogHeader>
             <AlertDialogTitle>Stop sharing artifact?</AlertDialogTitle>

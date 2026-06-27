@@ -32,7 +32,9 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
             })
             .from(artifact)
             .innerJoin(user, eq(artifact.userId, user.id))
-            .where(and(eq(artifact.id, artifactId), eq(artifact.isPublic, true)))
+            .where(
+              and(eq(artifact.id, artifactId), eq(artifact.isPublic, true))
+            )
             .limit(1);
 
           if (!artifactRow) {

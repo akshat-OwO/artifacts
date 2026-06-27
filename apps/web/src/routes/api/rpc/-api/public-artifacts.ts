@@ -9,13 +9,17 @@ import { GetPublicArtifactById } from "#/lib/schemas/artifacts";
 
 export class PublicArtifactsApi extends HttpApiGroup.make("publicArtifacts")
   .add(
-    HttpApiEndpoint.get("getPublicArtifactById", "/public/artifacts/:artifactId", {
-      error: [EffectDrizzleQueryError, SqlError, ArtifactNotFoundError],
-      params: Schema.Struct({
-        artifactId: Schema.String.check(Schema.isUUID()),
-      }),
-      success: GetPublicArtifactById,
-    })
+    HttpApiEndpoint.get(
+      "getPublicArtifactById",
+      "/public/artifacts/:artifactId",
+      {
+        error: [EffectDrizzleQueryError, SqlError, ArtifactNotFoundError],
+        params: Schema.Struct({
+          artifactId: Schema.String.check(Schema.isUUID()),
+        }),
+        success: GetPublicArtifactById,
+      }
+    )
   )
   .add(
     HttpApiEndpoint.get(

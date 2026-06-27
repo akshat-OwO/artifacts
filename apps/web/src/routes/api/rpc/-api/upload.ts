@@ -21,6 +21,7 @@ export class UploadApi extends HttpApiGroup.make("upload")
       ],
       payload: Schema.Struct({
         file: Schema.File,
+        name: Schema.optional(Schema.String),
       }),
       success: Schema.Struct({
         data: Schema.Struct({
