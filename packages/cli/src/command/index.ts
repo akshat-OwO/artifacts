@@ -1,5 +1,6 @@
 import * as Command from "effect/unstable/cli/Command";
 
+import { agentCommand } from "./agent.cmd";
 import {
   deleteArtifactCommand,
   getArtifactCommand,
@@ -12,6 +13,7 @@ import { uploadCommand } from "./upload.cmd";
 export const cli = Command.make("artifacts").pipe(
   Command.withDescription("Artifacts cli"),
   Command.withSubcommands([
+    agentCommand,
     authCommand,
     deleteArtifactCommand,
     getArtifactCommand,
