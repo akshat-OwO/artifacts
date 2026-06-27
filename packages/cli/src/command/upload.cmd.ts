@@ -6,6 +6,7 @@ import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
 import * as Prompt from "effect/unstable/cli/Prompt";
 
+import { style, successMessage } from "../lib/cli-output";
 import { ApiClient } from "../services/api-client";
 
 export const uploadCommand = Command.make(
@@ -29,6 +30,7 @@ export const uploadCommand = Command.make(
       data: { id },
     } = yield* apiClient.uploadArtifact(path, Option.getOrUndefined(name));
 
-    yield* Console.log(apiClient.artifactUrl(id));
+    yield* Console.log(successMessage("Artifact uploaded."));
+    yield* Console.log(style.link(apiClient.artifactUrl(id)));
   })
 ).pipe(Command.withDescription("Upload an artifact"));

@@ -8,6 +8,7 @@ import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
 import * as Prompt from "effect/unstable/cli/Prompt";
 
+import { infoMessage, style, successMessage } from "../lib/cli-output";
 import { ApiClient } from "../services/api-client";
 
 interface ArtifactListItem {
@@ -46,15 +47,17 @@ export const formatArtifactsTable = (
   );
 
   const lines = [
-    `${pad("id", 36)}  ${pad("name", nameWidth)}  ${pad(
-      "created",
-      createdWidth
-    )}  ${pad("updated", updatedWidth)}`,
+    style.muted(
+      `${pad("id", 36)}  ${pad("name", nameWidth)}  ${pad(
+        "created",
+        createdWidth
+      )}  ${pad("updated", updatedWidth)}`
+    ),
   ];
 
   for (const row of rows) {
     lines.push(
-      `${pad(row.id, 36)}  ${pad(row.name, nameWidth)}  ${pad(
+      `${style.code(pad(row.id, 36))}  ${pad(row.name, nameWidth)}  ${pad(
         row.created,
         createdWidth
       )}  ${pad(row.updated, updatedWidth)}`
@@ -72,10 +75,15 @@ export const listArtifactsCommand = Command.make(
     const artifacts = yield* apiClient.getArtifacts();
 
     if (artifacts.length === 0) {
-      yield* Console.log("No artifacts found.");
+      yield* Console.log(infoMessage("No artifacts found."));
       return;
     }
 
+    yield* Console.log(
+      style.heading(
+        `Artifacts (${artifacts.length} ${artifacts.length === 1 ? "item" : "items"})`
+      )
+    );
     yield* Console.log(formatArtifactsTable(artifacts));
   })
 ).pipe(Command.withDescription("List artifacts"));
@@ -89,7 +97,7 @@ export const getArtifactCommand = Command.make(
     const apiClient = yield* ApiClient;
     const artifact = yield* apiClient.getArtifact(id);
 
-    yield* Console.log(apiClient.artifactUrl(artifact.id));
+    yield* Console.log(style.link(apiClient.artifactUrl(artifact.id)));
   })
 ).pipe(Command.withDescription("Get an artifact URL"));
 
@@ -133,13 +141,13 @@ export const deleteArtifactCommand = Command.make(
         })));
 
     if (!shouldDelete) {
-      yield* Console.log("Delete cancelled.");
+      yield* Console.log(infoMessage("Delete cancelled."));
       return;
     }
 
     const apiClient = yield* ApiClient;
     yield* apiClient.deleteArtifact(id);
-    yield* Console.log("Artifact deleted.");
+    yield* Console.log(successMessage("Artifact deleted."));
   })
 ).pipe(Command.withDescription("Delete an artifact"));
 
@@ -183,6 +191,7 @@ export const updateArtifactCommand = Command.make(
       path: filePath,
     });
 
-    yield* Console.log(apiClient.artifactUrl(artifact.id));
+    yield* Console.log(successMessage("Artifact updated."));
+    yield* Console.log(style.link(apiClient.artifactUrl(artifact.id)));
   })
 ).pipe(Command.withDescription("Update an artifact"));

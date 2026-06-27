@@ -6,19 +6,22 @@ import * as Command from "effect/unstable/cli/Command";
 
 import { AuthDeviceCodeError } from "../errors/auth-device-code.error";
 import { AuthDeviceTokenError } from "../errors/auth-device-token.error";
+import { infoMessage, style, successMessage } from "../lib/cli-output";
 import { AuthClient } from "../services/auth.client";
 import { UserConfig } from "../services/user-config";
 
 const pollAuthToken = Effect.fn("@artifacts/cli/helpers/auth/pollToken")(
   function* handler(clientId: string, deviceCode: string, interval?: number) {
     const authClient = yield* AuthClient;
-    return yield* Effect.promise(() =>
-      authClient.device.token({
-        client_id: clientId,
-        device_code: deviceCode,
-        grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-      })
-    ).pipe(
+    return yield* Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () =>
+        authClient.device.token({
+          client_id: clientId,
+          device_code: deviceCode,
+          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        }),
+    }).pipe(
       Effect.repeat({
         schedule: Schedule.spaced(`${interval ?? 5} seconds`),
         until: ({ data, error }) => {
@@ -53,12 +56,14 @@ const loginAuthCmd = Command.make(
       Config.withDefault("artifacts-cli")
     );
 
-    const { data: deviceCode, error: deviceCodeError } = yield* Effect.promise(
-      () =>
-        authClient.device.code({
-          client_id: clientId,
-        })
-    );
+    const { data: deviceCode, error: deviceCodeError } =
+      yield* Effect.tryPromise({
+        catch: (cause) => cause,
+        try: () =>
+          authClient.device.code({
+            client_id: clientId,
+          }),
+      });
 
     if (deviceCodeError) {
       return yield* new AuthDeviceCodeError({
@@ -68,14 +73,18 @@ const loginAuthCmd = Command.make(
     }
 
     if (deviceCode) {
+      yield* Console.log(style.heading("Authorize Artifacts CLI"));
       yield* Console.log(
-        "\n1. Open the following URL in your browser to authorize:\n"
+        `${style.label("1.")} Open this URL in your browser:\n${style.link(
+          deviceCode.verification_uri
+        )}`
       );
-      yield* Console.log(deviceCode.verification_uri);
       yield* Console.log(
-        "\n2. Enter this one-time code after you are signed in:\n"
+        `${style.label("2.")} Enter this one-time code:\n${style.code(
+          deviceCode.user_code
+        )}`
       );
-      yield* Console.log(deviceCode.user_code);
+      yield* Console.log(infoMessage("Waiting for browser authorization..."));
 
       const { data: token, error: tokenError } = yield* pollAuthToken(
         clientId,
@@ -92,7 +101,7 @@ const loginAuthCmd = Command.make(
 
       if (token?.access_token) {
         yield* userConfig.saveAuthConf(token.access_token);
-        yield* Console.log("Authorization Successfull!");
+        yield* Console.log(successMessage("Authorization successful."));
       }
     }
   })
@@ -104,18 +113,21 @@ const authWhoAmiCmd = Command.make(
   Effect.fnUntraced(function* handler() {
     const authClient = yield* AuthClient;
 
-    const { data: session } = yield* Effect.promise(() =>
-      authClient.getSession()
-    );
+    const { data: session } = yield* Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => authClient.getSession(),
+    });
 
     if (session) {
       yield* Console.log(
-        `You are logged in as ${session.user.name} (${session.user.email})`
+        `${style.success("Logged in")} as ${style.label(
+          session.user.name
+        )} ${style.muted(`<${session.user.email}>`)}`
       );
       return;
     }
 
-    yield* Console.log("You are not logged in.");
+    yield* Console.log(infoMessage("You are not logged in."));
   })
 ).pipe(Command.withDescription("Get information about the current user"));
 
@@ -126,11 +138,14 @@ const logoutAuthCmd = Command.make(
     const authClient = yield* AuthClient;
     const userConfig = yield* UserConfig;
 
-    yield* Effect.promise(() => authClient.signOut());
+    yield* Effect.tryPromise({
+      catch: (cause) => cause,
+      try: () => authClient.signOut(),
+    });
 
     yield* userConfig.saveAuthConf("");
 
-    yield* Console.log("You have been logged out.");
+    yield* Console.log(successMessage("You have been logged out."));
   })
 ).pipe(Command.withDescription("Logout from the Artifacts CLI"));
 
