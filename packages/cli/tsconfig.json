@@ -12,6 +12,10 @@
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "#/*": ["../../apps/web/src/*"]
+    },
     "verbatimModuleSyntax": true,
     "noEmit": true,
 

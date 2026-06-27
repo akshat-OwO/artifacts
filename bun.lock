@@ -81,6 +81,7 @@
       "dependencies": {
         "@effect/platform-bun": "catalog:",
         "better-auth": "catalog:",
+        "date-fns": "^4.4.0",
         "effect": "catalog:",
         "open": "^11.0.0",
       },

@@ -1,0 +1,89 @@
+import nodePath from "node:path";
+
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import {
+  FetchHttpClient,
+  HttpClient,
+  HttpClientRequest,
+} from "effect/unstable/http";
+import { HttpApiClient } from "effect/unstable/httpapi";
+
+import { Api } from "../../../../apps/web/src/routes/api/rpc/-api";
+import { UserConfig } from "./user-config";
+
+const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
+  `${baseUrl.replace(/\/+$/u, "")}/a/${artifactId}`;
+
+export class ApiClient extends Context.Service<ApiClient>()(
+  "@artifacts/cli/services/apiClient",
+  {
+    make: Effect.gen(function* make() {
+      const userConfig = yield* UserConfig;
+      const fs = yield* FileSystem.FileSystem;
+      const { accessToken } = yield* userConfig.readAuthConf();
+
+      const baseUrl = yield* Config.string("BASE_URL").pipe(
+        Config.withDefault(
+          process.env.NODE_ENV === "production"
+            ? "https://artifacts.4kshat.dev"
+            : "http://localhost:3000"
+        )
+      );
+
+      const client = yield* HttpApiClient.make(Api, {
+        baseUrl,
+        transformClient: HttpClient.mapRequest(
+          HttpClientRequest.setHeader("Authorization", `Bearer ${accessToken}`)
+        ),
+      });
+
+      const healthCheck = Effect.fn("@artifacts/cli/helpers/apiHealthCheck")(
+        function* healthCheckHandler() {
+          return yield* client.system.health();
+        }
+      );
+
+      const getArtifacts = Effect.fn("@artifacts/cli/helpers/getArtifacts")(
+        function* getArtifactsHandler() {
+          return yield* client.artifacts.getArtifacts();
+        }
+      );
+
+      const getArtifact = Effect.fn("@artifacts/cli/helpers/getArtifact")(
+        function* getArtifactHandler(artifactId: string) {
+          return yield* client.artifacts.getArtifactById({
+            params: { artifactId },
+          });
+        }
+      );
+
+      const uploadArtifact = Effect.fn("@artifacts/cli/helpers/uploadArtifact")(
+        function* uploadArtifactHandler(filePath: string) {
+          const fileBytes = yield* fs.readFile(filePath);
+          const file = new File([fileBytes], nodePath.basename(filePath), {
+            type: "text/html",
+          });
+
+          return yield* client.upload.uploadArtifacts({
+            payload: { file },
+          });
+        }
+      );
+
+      return {
+        artifactUrl: (artifactId: string) =>
+          getArtifactUrl(baseUrl, artifactId),
+        getArtifact,
+        getArtifacts,
+        healthCheck,
+        uploadArtifact,
+      };
+    }).pipe(Effect.provide(FetchHttpClient.layer)),
+  }
+) {
+  static readonly layer = Layer.effect(this, this.make);
+}
