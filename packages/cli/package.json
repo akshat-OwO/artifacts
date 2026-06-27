@@ -1,6 +1,6 @@
 {
   "name": "@akshatowo/artifacts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
   "description": "CLI for publishing and managing Artifacts.",
   "bin": {
@@ -19,10 +19,10 @@
     "prepublishOnly": "bun run build && bun run check-types"
   },
   "dependencies": {
-    "@effect/platform-bun": "catalog:",
-    "better-auth": "catalog:",
+    "@effect/platform-bun": "4.0.0-beta.85",
+    "better-auth": "^1.6.18",
     "date-fns": "^4.4.0",
-    "effect": "catalog:",
+    "effect": "4.0.0-beta.85",
     "open": "^11.0.0"
   },
   "devDependencies": {

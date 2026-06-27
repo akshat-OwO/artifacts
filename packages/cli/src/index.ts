@@ -8,6 +8,14 @@ import { ApiClient } from "./services/api-client";
 import { AuthClient } from "./services/auth.client";
 import { UserConfig } from "./services/user-config";
 
+interface PackageJson {
+  readonly version: string;
+}
+
+const packageJson = (await Bun.file(
+  new URL("../package.json", import.meta.url)
+).json()) as PackageJson;
+
 const AppLive = Layer.mergeAll(
   BunServices.layer,
   AuthClient.layer.pipe(Layer.provideMerge(UserConfig.layer)),
@@ -17,7 +25,7 @@ const AppLive = Layer.mergeAll(
 );
 
 cli.pipe(
-  Command.run({ version: "0.0.1" }),
+  Command.run({ version: packageJson.version }),
   Effect.provide(AppLive),
   BunRuntime.runMain
 );
