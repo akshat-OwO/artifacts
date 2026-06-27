@@ -9,6 +9,7 @@ Upload, preview, and share self-contained HTML artifacts.
 ## Repository
 
 - `apps/web` — TanStack Start web application and API
+- `packages/cli` — command-line tools for uploading and sharing artifacts
 - `packages/scout` — isolated browser service used to render artifact previews
 
 The project is a Bun workspace managed with Turborepo. It uses TypeScript,
