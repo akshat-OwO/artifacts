@@ -1,40 +1,38 @@
+import { fileURLToPath } from "node:url";
+
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Command from "effect/unstable/cli/Command";
 
 const coreSkillCandidates = [
-  new URL("../agent-skills/CORE.md", import.meta.url),
-  new URL("../../agent-skills/CORE.md", import.meta.url),
+  fileURLToPath(new URL("../agent-skills/CORE.md", import.meta.url)),
+  fileURLToPath(new URL("../../agent-skills/CORE.md", import.meta.url)),
 ] as const;
 
-export const readCoreSkill = async (): Promise<string> => {
-  const candidates = await Promise.all(
-    coreSkillCandidates.map(async (path) => {
-      const file = Bun.file(path);
-      return {
-        exists: await file.exists(),
-        file,
-      };
-    })
-  );
+export const readCoreSkill = Effect.fn(
+  "@artifacts/cli/helpers/agent/readCoreSkill"
+)(function* handler() {
+  const fs = yield* FileSystem.FileSystem;
 
-  const candidate = candidates.find(({ exists }) => exists);
+  for (const path of coreSkillCandidates) {
+    const exists = yield* fs.exists(path);
 
-  if (candidate) {
-    return candidate.file.text();
+    if (exists) {
+      return yield* fs.readFileString(path);
+    }
   }
 
-  throw new Error("Could not find agent-skills/CORE.md in the CLI package.");
-};
+  return yield* Effect.fail(
+    new Error("Could not find agent-skills/CORE.md in the CLI package.")
+  );
+});
 
 const getCoreAgentCommand = Command.make(
   "core",
   {},
   Effect.fnUntraced(function* handler() {
-    const coreSkill = yield* Effect.tryPromise({
-      catch: (cause) => cause,
-      try: readCoreSkill,
-    });
+    const coreSkill = yield* readCoreSkill();
 
     yield* Console.log(coreSkill);
   })
