@@ -109,6 +109,14 @@ artifacts share 0192f2c2-8f0e-7000-9c41-68aaf2f4fd21
 
 Anyone with the printed `/s/<artifact-id>` link can view the artifact.
 
+Stop sharing an artifact:
+
+```sh
+artifacts unshare <artifact-id>
+```
+
+After unsharing, the public share link stops working.
+
 ## Configuration
 
 By default, production builds use:

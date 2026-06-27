@@ -19,3 +19,16 @@ export const shareCommand = Command.make(
     yield* Console.log(style.link(apiClient.shareUrl(artifact.id)));
   })
 ).pipe(Command.withDescription("Share an artifact"));
+
+export const unshareCommand = Command.make(
+  "unshare",
+  {
+    id: Argument.string("id").pipe(Argument.withDescription("The artifact id")),
+  },
+  Effect.fnUntraced(function* handler({ id }) {
+    const apiClient = yield* ApiClient;
+    yield* apiClient.setArtifactVisibility(id, false);
+
+    yield* Console.log(successMessage("Artifact unshared."));
+  })
+).pipe(Command.withDescription("Stop sharing an artifact"));
