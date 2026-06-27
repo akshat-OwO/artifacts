@@ -1,8 +1,23 @@
 {
-  "name": "@artifacts/cli",
-  "private": true,
+  "name": "@akshatowo/artifacts",
+  "version": "0.0.1",
+  "private": false,
+  "description": "CLI for publishing and managing Artifacts.",
+  "bin": {
+    "artifacts": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
-  "module": "src/index.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --target=bun --outfile=dist/index.js --banner='#!/usr/bin/env bun' && chmod +x dist/index.js",
+    "check-types": "tsc --noEmit",
+    "prepublishOnly": "bun run build && bun run check-types"
+  },
   "dependencies": {
     "@effect/platform-bun": "catalog:",
     "better-auth": "catalog:",
