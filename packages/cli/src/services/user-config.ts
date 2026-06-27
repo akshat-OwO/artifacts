@@ -8,6 +8,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 
+import { AuthConfigParseError } from "../errors/auth-config-parse.error";
+
 export interface AuthConfig {
   readonly accessToken?: string;
 }
@@ -69,7 +71,10 @@ export class UserConfig extends Context.Service<UserConfig>()(
         }
 
         const json = new TextDecoder().decode(bytes);
-        return JSON.parse(json) as AuthConfig;
+        return yield* Effect.try({
+          catch: (cause) => new AuthConfigParseError({ cause }),
+          try: () => JSON.parse(json) as AuthConfig,
+        });
       });
 
       return { readAuthConf, saveAuthConf };
