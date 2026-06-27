@@ -16,7 +16,8 @@
   "scripts": {
     "build": "bun build ./src/index.ts --target=bun --production --outfile=dist/index.js --banner='#!/usr/bin/env bun' && chmod +x dist/index.js",
     "check-types": "tsc --noEmit",
-    "prepublishOnly": "bun run build && bun run check-types"
+    "test": "bun test",
+    "prepublishOnly": "bun run test && bun run build && bun run check-types"
   },
   "dependencies": {
     "@effect/platform-bun": "4.0.0-beta.85",
