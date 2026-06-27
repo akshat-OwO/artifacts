@@ -18,12 +18,12 @@ interface ArtifactListItem {
   readonly updatedAt: Date;
 }
 
-const formatRelativeDate = (date: Date): string =>
+export const formatRelativeDate = (date: Date): string =>
   `${formatDistanceToNow(date)} ago`;
 
 const pad = (value: string, width: number): string => value.padEnd(width);
 
-const formatArtifactsTable = (
+export const formatArtifactsTable = (
   artifacts: readonly ArtifactListItem[]
 ): string => {
   const rows = artifacts.map((artifact) => ({

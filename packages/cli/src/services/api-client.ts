@@ -15,7 +15,7 @@ import { HttpApiClient } from "effect/unstable/httpapi";
 import { Api } from "../../../../apps/web/src/routes/api/rpc/-api";
 import { UserConfig } from "./user-config";
 
-const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
+export const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/a/${artifactId}`;
 
 interface UpdateArtifactInput {
