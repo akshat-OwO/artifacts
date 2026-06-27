@@ -8,6 +8,7 @@ import { PreviewError } from "#/lib/errors/artifacts/preview-error";
 import { FileTooLargeError } from "#/lib/errors/upload/file-size";
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
 import { InvalidFileTypeError } from "#/lib/errors/upload/invalid-file";
+import { UsageLimitExceededError } from "#/lib/errors/upload/usage-limit";
 import { GetArtifactById } from "#/lib/schemas/artifacts";
 
 import { AuthMiddleware } from "../-middlewares/auth";
@@ -48,6 +49,7 @@ export class ArtifactsApi extends HttpApiGroup.make("artifacts")
         SqlError,
         ArtifactNotFoundError,
         FileTooLargeError,
+        UsageLimitExceededError,
         InvalidFileTypeError,
         FileUploadError,
       ],

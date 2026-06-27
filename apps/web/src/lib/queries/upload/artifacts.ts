@@ -28,6 +28,10 @@ export const uploadArtifactsMutations = () => {
           FileUploadError: () =>
             Effect.fail("File Upload Error! Please try again."),
           Unauthorized: () => Effect.fail("Unauthorized"),
+          UsageLimitExceededError: () =>
+            Effect.fail(
+              "Upload limit exceeded. Delete an artifact or choose a smaller file."
+            ),
         }),
         Effect.catchTag(
           [

@@ -76,6 +76,10 @@ export const updateArtifactMutation = () => {
           InvalidFileTypeError: () =>
             Effect.fail("Please choose an HTML file."),
           Unauthorized: () => Effect.fail("Unauthorized"),
+          UsageLimitExceededError: () =>
+            Effect.fail(
+              "Upload limit exceeded. Delete an artifact or choose a smaller file."
+            ),
         }),
         Effect.catchTag(
           [
