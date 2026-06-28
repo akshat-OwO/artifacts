@@ -34,7 +34,7 @@
   "steps": {
     "build": {
       "commands": [
-        "PLAYWRIGHT_BROWSERS_PATH=0 bun --cwd packages/scout x playwright install chromium"
+        "cd packages/scout && PLAYWRIGHT_BROWSERS_PATH=0 bun x playwright install chromium"
       ]
     }
   },
