@@ -11,6 +11,6 @@
     }
   },
   "deploy": {
-    "startCommand": "bun --cwd apps/start db:migrate && bun --cwd apps/web start"
+    "startCommand": "bun --cwd apps/web db:migrate && bun --cwd apps/web start"
   }
 }
