@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "bun --bun vite dev --port 3000",
-    "start": "bun run server.ts",
+    "start": "bun --bun run server.ts",
     "generate-routes": "tsr generate",
     "build": "bun run generate-routes && bun --bun vite build",
     "check-types": "bun run generate-routes && tsc --noEmit",
