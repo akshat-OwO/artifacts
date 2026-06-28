@@ -65,7 +65,7 @@
       "libxrandr2",
       "libxshmfence1"
     ],
-    "startCommand": "bun --cwd packages/scout run start",
+    "startCommand": "bun --cwd packages/scout start",
     "variables": {
       "PLAYWRIGHT_BROWSERS_PATH": "0"
     }

@@ -7,10 +7,10 @@
   },
   "steps": {
     "build": {
-      "commands": ["bun --cwd apps/web run build"]
+      "commands": ["bun --cwd apps/web build"]
     }
   },
   "deploy": {
-    "startCommand": "bun --cwd apps/web run start"
+    "startCommand": "bun --cwd apps/web start"
   }
 }
