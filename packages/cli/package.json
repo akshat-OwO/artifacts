@@ -1,12 +1,13 @@
 {
   "name": "@akshatowo/artifacts",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": false,
   "description": "CLI for publishing and managing Artifacts.",
   "bin": {
-    "artifacts": "./dist/index.js"
+    "artifacts": "dist/index.js"
   },
   "files": [
+    "agent-skills",
     "dist"
   ],
   "type": "module",
@@ -16,11 +17,13 @@
   "scripts": {
     "build": "bun build ./src/index.ts --target=bun --production --outfile=dist/index.js --banner='#!/usr/bin/env bun' && chmod +x dist/index.js",
     "check-types": "tsc --noEmit",
-    "prepublishOnly": "bun run build && bun run check-types"
+    "test": "bun test",
+    "prepublishOnly": "bun run test && bun run build && bun run check-types"
   },
   "dependencies": {
     "@effect/platform-bun": "4.0.0-beta.85",
     "better-auth": "^1.6.18",
+    "chalk": "^5.6.2",
     "date-fns": "^4.4.0",
     "effect": "4.0.0-beta.85",
     "open": "^11.0.0"

@@ -15,7 +15,7 @@ import { HttpApiClient } from "effect/unstable/httpapi";
 import { Api } from "../../../../apps/web/src/routes/api/rpc/-api";
 import { UserConfig } from "./user-config";
 
-const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
+export const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/a/${artifactId}`;
 
 const getUploadPayload = ({
@@ -37,6 +37,9 @@ const getUploadPayload = ({
 
   return payload;
 };
+
+export const getShareUrl = (baseUrl: string, artifactId: string): string =>
+  `${baseUrl.replace(/\/+$/u, "")}/s/${artifactId}`;
 
 interface UpdateArtifactInput {
   readonly name?: string;
@@ -94,6 +97,18 @@ export class ApiClient extends Context.Service<ApiClient>()(
         }
       );
 
+      const setArtifactVisibility = Effect.fn(
+        "@artifacts/cli/helpers/setArtifactVisibility"
+      )(function* setArtifactVisibilityHandler(
+        artifactId: string,
+        isPublic: boolean
+      ) {
+        return yield* client.artifacts.setArtifactVisibility({
+          params: { artifactId },
+          payload: { isPublic },
+        });
+      });
+
       const fileFromPath = Effect.fn("@artifacts/cli/helpers/fileFromPath")(
         function* fileFromPathHandler(filePath: string) {
           const fileBytes = yield* fs.readFile(filePath);
@@ -135,6 +150,8 @@ export class ApiClient extends Context.Service<ApiClient>()(
         getArtifact,
         getArtifacts,
         healthCheck,
+        setArtifactVisibility,
+        shareUrl: (artifactId: string) => getShareUrl(baseUrl, artifactId),
         updateArtifact,
         uploadArtifact,
       };
