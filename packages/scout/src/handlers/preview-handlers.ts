@@ -5,6 +5,7 @@ import type { Page } from "playwright";
 import { PreviewError } from "../errors/preview-error";
 import { Api } from "../routes";
 import { Browser } from "../services/browser";
+import { PreviewLock } from "../services/preview-lock";
 
 const closePage = (page: Page) =>
   Effect.tryPromise(() => page.close()).pipe(Effect.orDie);
@@ -42,7 +43,7 @@ const previewOperation = <A>(
     try: evaluate,
   });
 
-const createPreview = (url: string) =>
+const generatePreview = (url: string) =>
   Effect.gen(function* captureScreenshot() {
     const browser = yield* Browser;
     const page = yield* Effect.acquireRelease(
@@ -75,6 +76,12 @@ const createPreview = (url: string) =>
       (cause) => new PreviewError({ message: errorMessage(cause) })
     )
   );
+
+const createPreview = (url: string) =>
+  Effect.gen(function* serializePreview() {
+    const lock = yield* PreviewLock;
+    return yield* lock.withPermit(generatePreview(url));
+  });
 
 export const PreviewApiHandler = HttpApiBuilder.group(
   Api,
