@@ -12,6 +12,8 @@ describe("readCoreSkill", () => {
     );
 
     expect(coreSkill).toContain("# Artifacts CLI Core Skill");
+    expect(coreSkill).toContain("name: artifacts-core");
+    expect(coreSkill).toContain("description:");
     expect(coreSkill).toContain("artifacts upload");
     expect(coreSkill).toContain("artifacts agent get core");
   });
