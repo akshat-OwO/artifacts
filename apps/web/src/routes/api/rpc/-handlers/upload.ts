@@ -32,14 +32,29 @@ const getUserArtifactUsageBytes = () =>
     Number
   );
 
+const getRequestFormData = (request: Request) =>
+  Effect.tryPromise({
+    catch: () => new FileUploadError(),
+    try: () => request.formData(),
+  });
+
 export const UploadApiHandler = HttpApiBuilder.group(
   Api,
   "upload",
   (handlers) =>
-    handlers.handle("uploadArtifacts", ({ payload }) =>
+    handlers.handleRaw("uploadArtifacts", ({ request }) =>
       Effect.gen(function* handle() {
-        const { file } = payload;
-        const name = payload.name?.trim();
+        const formData = yield* getRequestFormData(request.source as Request);
+        const fileEntry = formData.get("file");
+        const nameEntry = formData.get("name");
+
+        if (!(fileEntry instanceof File)) {
+          return yield* new InvalidFileTypeError();
+        }
+
+        const file = fileEntry;
+        const name =
+          typeof nameEntry === "string" ? nameEntry.trim() : undefined;
         const storage = yield* Storage;
 
         const user = yield* AuthUser;

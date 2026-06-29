@@ -11,7 +11,9 @@ const uploadArtifactHandler = Effect.fn(
   "artifacts/mutations/uploadArtifactHandler"
 )(function* uploadArtifactHandler(file: File) {
   const apiClient = yield* ApiClient;
-  return yield* apiClient.upload.uploadArtifacts({ payload: { file } });
+  const payload = new FormData();
+  payload.set("file", file);
+  return yield* apiClient.upload.uploadArtifacts({ payload });
 });
 
 const UPLOAD_DEDUP_ID = "upload-artifact-mutation";

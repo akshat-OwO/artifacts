@@ -1,6 +1,10 @@
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core";
 import * as Schema from "effect/Schema";
-import { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+} from "effect/unstable/httpapi";
 import { SqlError } from "effect/unstable/sql/SqlError";
 
 import { ArtifactNotFoundError } from "#/lib/errors/artifacts/artifact-not-found";
@@ -59,7 +63,7 @@ export class ArtifactsApi extends HttpApiGroup.make("artifacts")
       payload: Schema.Struct({
         file: Schema.optional(Schema.File),
         name: Schema.optional(Schema.String),
-      }),
+      }).pipe(HttpApiSchema.asMultipart()),
       success: GetArtifactById,
     })
   )

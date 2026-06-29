@@ -34,6 +34,12 @@ const getUserArtifactUsageBytes = () =>
     Number
   );
 
+const getRequestFormData = (request: Request) =>
+  Effect.tryPromise({
+    catch: () => new FileUploadError(),
+    try: () => request.formData(),
+  });
+
 const captureArtifactPreview = ({
   artifactId,
   artifactKey,
@@ -164,13 +170,17 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
           );
         }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
       )
-      .handle("updateArtifact", ({ params: { artifactId }, payload }) =>
+      .handleRaw("updateArtifact", ({ params: { artifactId }, request }) =>
         Effect.gen(function* handler() {
           const db = yield* PgDrizzle.makeWithDefaults();
           const storage = yield* Storage;
           const user = yield* AuthUser;
-          const { file } = payload;
-          const name = payload.name?.trim();
+          const formData = yield* getRequestFormData(request.source as Request);
+          const fileEntry = formData.get("file");
+          const nameEntry = formData.get("name");
+          const file = fileEntry instanceof File ? fileEntry : undefined;
+          const name =
+            typeof nameEntry === "string" ? nameEntry.trim() : undefined;
 
           if (file) {
             if (file.size > MAX_FILE_SIZE) {

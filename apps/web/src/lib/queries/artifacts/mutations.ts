@@ -24,9 +24,19 @@ const updateArtifactHandler = Effect.fn(
   name,
 }: UpdateArtifactInput) {
   const apiClient = yield* ApiClient;
+  const payload = new FormData();
+
+  if (file) {
+    payload.set("file", file);
+  }
+
+  if (name !== undefined) {
+    payload.set("name", name);
+  }
+
   return yield* apiClient.artifacts.updateArtifact({
     params: { artifactId },
-    payload: { file, name },
+    payload,
   });
 });
 
