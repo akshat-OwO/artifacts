@@ -2,6 +2,7 @@ import { defineRelations, sql } from "drizzle-orm";
 import {
   boolean,
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -29,6 +30,7 @@ export const artifact = pgTable(
   "artifact",
   {
     artifactKey: text("artifact_key").notNull().unique(),
+    artifactSizeBytes: integer("artifact_size_bytes").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     id: uuid("id").defaultRandom().primaryKey(),
     isPublic: boolean("is_public").default(false).notNull(),

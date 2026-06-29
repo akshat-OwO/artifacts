@@ -24,9 +24,19 @@ const updateArtifactHandler = Effect.fn(
   name,
 }: UpdateArtifactInput) {
   const apiClient = yield* ApiClient;
+  const payload = new FormData();
+
+  if (file) {
+    payload.set("file", file);
+  }
+
+  if (name !== undefined) {
+    payload.set("name", name);
+  }
+
   return yield* apiClient.artifacts.updateArtifact({
     params: { artifactId },
-    payload: { file, name },
+    payload,
   });
 });
 
@@ -76,6 +86,10 @@ export const updateArtifactMutation = () => {
           InvalidFileTypeError: () =>
             Effect.fail("Please choose an HTML file."),
           Unauthorized: () => Effect.fail("Unauthorized"),
+          UsageLimitExceededError: () =>
+            Effect.fail(
+              "Upload limit exceeded. Delete an artifact or choose a smaller file."
+            ),
         }),
         Effect.catchTag(
           [

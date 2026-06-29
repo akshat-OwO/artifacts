@@ -11,7 +11,9 @@ const uploadArtifactHandler = Effect.fn(
   "artifacts/mutations/uploadArtifactHandler"
 )(function* uploadArtifactHandler(file: File) {
   const apiClient = yield* ApiClient;
-  return yield* apiClient.upload.uploadArtifacts({ payload: { file } });
+  const payload = new FormData();
+  payload.set("file", file);
+  return yield* apiClient.upload.uploadArtifacts({ payload });
 });
 
 const UPLOAD_DEDUP_ID = "upload-artifact-mutation";
@@ -28,6 +30,10 @@ export const uploadArtifactsMutations = () => {
           FileUploadError: () =>
             Effect.fail("File Upload Error! Please try again."),
           Unauthorized: () => Effect.fail("Unauthorized"),
+          UsageLimitExceededError: () =>
+            Effect.fail(
+              "Upload limit exceeded. Delete an artifact or choose a smaller file."
+            ),
         }),
         Effect.catchTag(
           [

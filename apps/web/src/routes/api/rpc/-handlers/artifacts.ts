@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -12,9 +12,11 @@ import { PreviewError } from "#/lib/errors/artifacts/preview-error";
 import {
   FileTooLargeError,
   MAX_FILE_SIZE,
+  USER_UPLOAD_GRACE_LIMIT_BYTES,
 } from "#/lib/errors/upload/file-size";
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
 import { InvalidFileTypeError } from "#/lib/errors/upload/invalid-file";
+import { UsageLimitExceededError } from "#/lib/errors/upload/usage-limit";
 import { ScoutApiLive, ScoutApiService } from "#/lib/scout";
 import { Storage, StorageLive } from "#/lib/storage";
 
@@ -26,6 +28,17 @@ const isHtmlFile = (file: File): boolean =>
   HTML_FILE_TYPES.has(file.type) ||
   file.name.endsWith(".html") ||
   file.name.endsWith(".htm");
+
+const getUserArtifactUsageBytes = () =>
+  sql<number>`coalesce(sum(${artifact.artifactSizeBytes}), 0)::integer`.mapWith(
+    Number
+  );
+
+const getRequestFormData = (request: Request) =>
+  Effect.tryPromise({
+    catch: () => new FileUploadError(),
+    try: () => request.formData(),
+  });
 
 const captureArtifactPreview = ({
   artifactId,
@@ -157,25 +170,17 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
           );
         }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
       )
-      .handle("updateArtifact", ({ params: { artifactId }, payload }) =>
+      .handleRaw("updateArtifact", ({ params: { artifactId }, request }) =>
         Effect.gen(function* handler() {
           const db = yield* PgDrizzle.makeWithDefaults();
           const storage = yield* Storage;
           const user = yield* AuthUser;
-          const { file } = payload;
-          const name = payload.name?.trim();
-
-          const [existingArtifact] = yield* db
-            .select()
-            .from(artifact)
-            .where(
-              and(eq(artifact.id, artifactId), eq(artifact.userId, user.id))
-            )
-            .limit(1);
-
-          if (!existingArtifact) {
-            return yield* new ArtifactNotFoundError();
-          }
+          const formData = yield* getRequestFormData(request.source as Request);
+          const fileEntry = formData.get("file");
+          const nameEntry = formData.get("name");
+          const file = fileEntry instanceof File ? fileEntry : undefined;
+          const name =
+            typeof nameEntry === "string" ? nameEntry.trim() : undefined;
 
           if (file) {
             if (file.size > MAX_FILE_SIZE) {
@@ -188,51 +193,133 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
             if (!isHtmlFile(file)) {
               return yield* new InvalidFileTypeError();
             }
-
-            yield* Effect.tryPromise({
-              catch: () => new FileUploadError(),
-              try: () =>
-                storage.r2.upload(existingArtifact.artifactKey, file, {
-                  contentType: "text/html",
-                  metadata: { userId: user.id },
-                }),
-            });
           }
 
-          const [updatedArtifact] = yield* db
-            .update(artifact)
-            .set({
-              ...(name ? { name } : {}),
-              ...(file ? { previewKey: DEFAULT_ARTIFACT_PREVIEW_KEY } : {}),
-            })
-            .where(
-              and(eq(artifact.id, artifactId), eq(artifact.userId, user.id))
-            )
-            .returning({
-              artifactKey: artifact.artifactKey,
-              createdAt: artifact.createdAt,
-              id: artifact.id,
-              isPublic: artifact.isPublic,
-              name: artifact.name,
-              previewKey: artifact.previewKey,
-              updatedAt: artifact.updatedAt,
-            });
+          const updateResult = file
+            ? yield* db.transaction((tx) =>
+                Effect.gen(function* transaction() {
+                  yield* tx.execute(
+                    sql`select pg_advisory_xact_lock(hashtext(${user.id}))`
+                  );
 
-          if (!updatedArtifact) {
-            return yield* new ArtifactNotFoundError();
-          }
+                  const [existingArtifact] = yield* tx
+                    .select()
+                    .from(artifact)
+                    .where(
+                      and(
+                        eq(artifact.id, artifactId),
+                        eq(artifact.userId, user.id)
+                      )
+                    )
+                    .limit(1);
 
-          if (file) {
+                  if (!existingArtifact) {
+                    return yield* new ArtifactNotFoundError();
+                  }
+
+                  const [usage] = yield* tx
+                    .select({
+                      artifactSizeBytes: getUserArtifactUsageBytes(),
+                    })
+                    .from(artifact)
+                    .where(eq(artifact.userId, user.id));
+                  const currentBytes = usage?.artifactSizeBytes ?? 0;
+                  const projectedBytes =
+                    currentBytes -
+                    existingArtifact.artifactSizeBytes +
+                    file.size;
+
+                  if (projectedBytes > USER_UPLOAD_GRACE_LIMIT_BYTES) {
+                    return yield* new UsageLimitExceededError({
+                      currentBytes,
+                      incomingBytes: file.size,
+                      maximumBytes: USER_UPLOAD_GRACE_LIMIT_BYTES,
+                    });
+                  }
+
+                  yield* Effect.tryPromise({
+                    catch: () => new FileUploadError(),
+                    try: () =>
+                      storage.r2.upload(existingArtifact.artifactKey, file, {
+                        contentType: "text/html",
+                        metadata: { userId: user.id },
+                      }),
+                  });
+
+                  const [updatedArtifact] = yield* tx
+                    .update(artifact)
+                    .set({
+                      artifactSizeBytes: file.size,
+                      ...(name ? { name } : {}),
+                      previewKey: DEFAULT_ARTIFACT_PREVIEW_KEY,
+                    })
+                    .where(
+                      and(
+                        eq(artifact.id, artifactId),
+                        eq(artifact.userId, user.id)
+                      )
+                    )
+                    .returning({
+                      artifactKey: artifact.artifactKey,
+                      createdAt: artifact.createdAt,
+                      id: artifact.id,
+                      isPublic: artifact.isPublic,
+                      name: artifact.name,
+                      previewKey: artifact.previewKey,
+                      updatedAt: artifact.updatedAt,
+                    });
+
+                  if (!updatedArtifact) {
+                    return yield* new ArtifactNotFoundError();
+                  }
+
+                  return {
+                    artifact: updatedArtifact,
+                    previewArtifactKey: existingArtifact.artifactKey,
+                  };
+                })
+              )
+            : yield* Effect.gen(function* updateMetadata() {
+                const [updatedArtifact] = yield* db
+                  .update(artifact)
+                  .set(name ? { name } : {})
+                  .where(
+                    and(
+                      eq(artifact.id, artifactId),
+                      eq(artifact.userId, user.id)
+                    )
+                  )
+                  .returning({
+                    artifactKey: artifact.artifactKey,
+                    createdAt: artifact.createdAt,
+                    id: artifact.id,
+                    isPublic: artifact.isPublic,
+                    name: artifact.name,
+                    previewKey: artifact.previewKey,
+                    updatedAt: artifact.updatedAt,
+                  });
+
+                if (!updatedArtifact) {
+                  return yield* new ArtifactNotFoundError();
+                }
+
+                return {
+                  artifact: updatedArtifact,
+                  previewArtifactKey: undefined,
+                };
+              });
+
+          if (updateResult.previewArtifactKey) {
             yield* Effect.forkDetach(
               captureArtifactPreview({
                 artifactId,
-                artifactKey: existingArtifact.artifactKey,
+                artifactKey: updateResult.previewArtifactKey,
                 userId: user.id,
               })
             );
           }
 
-          return { author: user.name, ...updatedArtifact };
+          return { author: user.name, ...updateResult.artifact };
         }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
       )
       .handle(

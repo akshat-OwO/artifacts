@@ -18,6 +18,26 @@ import { UserConfig } from "./user-config";
 export const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/a/${artifactId}`;
 
+const getUploadPayload = ({
+  file,
+  name,
+}: {
+  readonly file?: File;
+  readonly name?: string;
+}): FormData => {
+  const payload = new FormData();
+
+  if (file) {
+    payload.set("file", file);
+  }
+
+  if (name !== undefined) {
+    payload.set("name", name);
+  }
+
+  return payload;
+};
+
 export const getShareUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/s/${artifactId}`;
 
@@ -104,7 +124,7 @@ export class ApiClient extends Context.Service<ApiClient>()(
           const file = yield* fileFromPath(filePath);
 
           return yield* client.upload.uploadArtifacts({
-            payload: { file, name },
+            payload: getUploadPayload({ file, name }),
           });
         }
       );
@@ -118,7 +138,7 @@ export class ApiClient extends Context.Service<ApiClient>()(
 
           return yield* client.artifacts.updateArtifact({
             params: { artifactId },
-            payload: { file, name: input.name },
+            payload: getUploadPayload({ file, name: input.name }),
           });
         }
       );
