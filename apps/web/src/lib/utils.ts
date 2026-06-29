@@ -4,6 +4,25 @@ import { twMerge } from "tailwind-merge";
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(inputs));
 
+const BYTES_PER_UNIT = 1024;
+const BYTE_UNITS = ["B", "KB", "MB", "GB", "TB"] as const;
+
+export const formatBytes = (bytes: number, fractionDigits = 1): string => {
+  if (bytes <= 0) {
+    return "0 MB";
+  }
+
+  const exponent = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(BYTES_PER_UNIT)),
+    BYTE_UNITS.length - 1
+  );
+  const value = bytes / BYTES_PER_UNIT ** exponent;
+  const rounded =
+    exponent === 0 ? value : Number(value.toFixed(fractionDigits));
+
+  return `${rounded} ${BYTE_UNITS[exponent]}`;
+};
+
 const DEFAULT_LUMINANCE_THRESHOLD = 0.5;
 const MAX_SAMPLE_SIZE = 64;
 

@@ -9,6 +9,8 @@ export const HOME_PAGE_TITLE = "Artifacts | Share agent generated artifacts";
 
 export const ARTIFACTS_PAGE_TITLE = pageTitle("Your artifacts");
 
+export const SETTINGS_PAGE_TITLE = pageTitle("Settings");
+
 interface PageHeadOptions {
   title: string;
   description?: string;

@@ -93,6 +93,8 @@ const NavbarContent = () => {
                   size="icon-xl"
                   variant="secondary"
                   aria-label="Settings"
+                  title="Settings"
+                  render={<Link to="/settings" />}
                 >
                   <HugeiconsIcon icon={CogIcon} />
                 </Button>
@@ -139,10 +141,10 @@ const NavbarContent = () => {
                   <HugeiconsIcon icon={BrowseIcon} />
                   {browseMenuLabel}
                 </MenuLinkItem>
-                <MenuItem>
+                <MenuLinkItem render={<Link to="/settings" />}>
                   <HugeiconsIcon icon={CogIcon} />
                   Settings
-                </MenuItem>
+                </MenuLinkItem>
                 <MenuSeparator />
               </>
             ) : (
