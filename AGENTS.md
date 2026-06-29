@@ -113,20 +113,25 @@ Ultracite catches formatting and common static-analysis issues. Pay particular a
 Environment is provisioned via the startup update script (`bun install`) plus a VM snapshot that already contains: Bun `1.3.14`, Node 24 (nvm default), a local PostgreSQL 16 server, Playwright Chromium, and the gitignored `.env` files for both apps. The notes below are durable, non-obvious caveats; standard commands live in `README.md`, root `package.json` scripts, and each app's `package.json`.
 
 ### Services
+
 - **`apps/web`** (TanStack Start, port 3000) and **`packages/scout`** (Playwright preview service, port 8787). `bun run dev` at the root starts both via Turbo, but Turbo's TUI is awkward to read non-interactively — prefer running each service in its own shell/tmux session with `bun run dev` from its package dir when you need clean logs.
 
 ### Database
+
 - PostgreSQL is NOT auto-started on boot. Start it each session with `sudo pg_ctlcluster 16 main start`.
 - Local DB/role: database `artifacts`, user `artifacts`, password `artifacts`. `DATABASE_URL` is already set in `apps/web/.env`. Apply schema with `bun run db:migrate` from `apps/web` (idempotent).
 
 ### Required env gotchas (already handled in `apps/web/.env`)
+
 - The R2 storage adapter (`files-sdk`) throws if any `CF_*` var is empty, which makes EVERY web page return HTTP 500. `apps/web/.env` uses non-empty placeholder `CF_*` values so the app boots; actual uploads still need real Cloudflare R2 credentials.
 - Google OAuth is not configured. The navbar "Login" button calls `signInWithGoogle` directly (redirects to Google) and fails without `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`. The in-app "Sign in to continue" dialog only appears via the uploader drop flow (drag/select an HTML file while logged out).
 - Scout auth: requests need header `X-API-KEY` matching `API_KEY` in `packages/scout/.env`, which equals `SCOUT_API_KEY` in `apps/web/.env`. Core endpoint: `GET /preview?url=<url>` returns a WebP screenshot.
 
 ### Tests & lint (current repo state)
+
 - `apps/web` has a `test` script (vitest) but there are no test files yet, so `bun run test` exits 1 with "No test files found" — this is expected, not a setup failure.
 - `bun x ultracite check` currently reports pre-existing format/lint issues on `main` (e.g. `apps/web/src/lib/seo.ts`, `apps/web/src/components/navbar.tsx`) and exits 1.
 
 ### Node version note
+
 - `node` may resolve to a v22 binary earlier on `PATH`. For commands that need Node 24 (engine requires `>=24`), prepend nvm's bin (`export PATH="$HOME/.nvm/versions/node/v24.18.0/bin:$PATH"`). Most scripts run under Bun (`bun --bun ...`) and are unaffected.

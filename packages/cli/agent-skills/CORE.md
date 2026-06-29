@@ -1,6 +1,6 @@
 ---
 name: artifacts-core
-description: Upload, list, inspect, update, and delete Artifacts HTML URLs with the Artifacts CLI. Use when a task needs a shareable URL for a local .html file or needs to manage existing Artifacts.
+description: Upload, list, inspect, share, unshare, update, and delete Artifacts HTML URLs with the Artifacts CLI. Use when a task needs a shareable URL for a local .html file or needs to manage existing Artifacts.
 compatibility: Requires Bun and the @akshatowo/artifacts CLI.
 metadata:
   version: "1.0.0"
@@ -16,7 +16,8 @@ manage existing Artifacts.
 - Use when the user has a local `.html` file that should be shared as a URL.
 - Use when creating a report, explanation, exploration document, or other HTML
   document that should be uploaded.
-- Use when the user asks to list, inspect, update, rename, or delete Artifacts.
+- Use when the user asks to list, inspect, share, unshare, update, rename, or
+  delete Artifacts.
 
 ## Setup
 
@@ -65,6 +66,31 @@ Example: `artifacts get 0192f2c2-8f0e-7000-9c41-68aaf2f4fd21`
 Expected output:
 
 - The public artifact URL.
+
+### Share an artifact
+
+Run `artifacts share <artifact-id>` to make an artifact public and print its
+share URL.
+
+Example: `artifacts share 0192f2c2-8f0e-7000-9c41-68aaf2f4fd21`
+
+Expected output:
+
+- `Success Artifact shared.`
+- A public `/s/<artifact-id>` share URL.
+
+Run `artifacts unshare <artifact-id>` to stop public sharing for an artifact.
+
+Example: `artifacts unshare 0192f2c2-8f0e-7000-9c41-68aaf2f4fd21`
+
+Expected output:
+
+- `Success Artifact unshared.`
+
+Notes:
+
+- Anyone with the `/s/<artifact-id>` URL can view a shared artifact.
+- After unsharing, the public share URL stops working.
 
 ### Update an artifact
 
