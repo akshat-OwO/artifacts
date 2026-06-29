@@ -5,6 +5,7 @@ import {
   infoMessage,
   successMessage,
 } from "../../src/lib/cli-output";
+import { plainText } from "../helpers/plain-text";
 
 describe("formatCliError", () => {
   test("explains missing auth for unauthorized errors", () => {
@@ -54,12 +55,14 @@ describe("formatCliError", () => {
 
 describe("status messages", () => {
   test("prefixes success messages", () => {
-    expect(successMessage("Artifact deleted.")).toBe(
+    expect(plainText(successMessage("Artifact deleted."))).toBe(
       "Success Artifact deleted."
     );
   });
 
   test("prefixes info messages", () => {
-    expect(infoMessage("No artifacts found.")).toBe("Info No artifacts found.");
+    expect(plainText(infoMessage("No artifacts found."))).toBe(
+      "Info No artifacts found."
+    );
   });
 });

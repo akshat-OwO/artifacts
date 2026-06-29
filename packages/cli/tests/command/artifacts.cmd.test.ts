@@ -4,6 +4,7 @@ import {
   formatArtifactsTable,
   formatRelativeDate,
 } from "../../src/command/artifacts.cmd";
+import { plainText } from "../helpers/plain-text";
 
 describe("formatRelativeDate", () => {
   test("adds the CLI suffix", () => {
@@ -46,20 +47,22 @@ describe("formatArtifactsTable", () => {
 
   test("pads names so date columns stay aligned", () => {
     const now = new Date();
-    const table = formatArtifactsTable([
-      {
-        createdAt: now,
-        id: "12345678-1234-1234-1234-123456789abc",
-        name: "a",
-        updatedAt: now,
-      },
-      {
-        createdAt: now,
-        id: "abcdefab-abcd-abcd-abcd-abcdefabcdef",
-        name: "much-longer-name",
-        updatedAt: now,
-      },
-    ]);
+    const table = plainText(
+      formatArtifactsTable([
+        {
+          createdAt: now,
+          id: "12345678-1234-1234-1234-123456789abc",
+          name: "a",
+          updatedAt: now,
+        },
+        {
+          createdAt: now,
+          id: "abcdefab-abcd-abcd-abcd-abcdefabcdef",
+          name: "much-longer-name",
+          updatedAt: now,
+        },
+      ])
+    );
 
     const [header = "", shortRow = "", longRow = ""] = table.split("\n");
 
