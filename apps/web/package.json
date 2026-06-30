@@ -6,12 +6,12 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "bun --bun vite dev --port 3000",
-    "start": "bun --bun run ./.output/server/index.mjs",
+    "dev": "bun vite dev --port 3000",
+    "start": "bun run ./.output/server/index.mjs",
     "generate-routes": "tsr generate",
-    "build": "bun run generate-routes && bun --bun vite build",
+    "build": "bun run generate-routes && bun vite build",
     "check-types": "bun run generate-routes && tsc --noEmit",
-    "preview": "bun --bun vite preview",
+    "preview": "bun vite preview",
     "test": "vitest run",
     "db:generate": "bunx --bun drizzle-kit generate",
     "db:migrate": "bunx --bun drizzle-kit migrate"

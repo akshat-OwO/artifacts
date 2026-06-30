@@ -14,10 +14,10 @@ export class Storage extends Context.Service<
 export const StorageLive = Layer.succeed(Storage, {
   r2: new Files({
     adapter: r2({
-      accessKeyId: Bun.env.CF_ACCESS_KEY_ID || "",
-      accountId: Bun.env.CF_ACCOUNT_ID || "",
-      bucket: Bun.env.CF_R2_BUCKET || "",
-      secretAccessKey: Bun.env.CF_SECRET_ACCESS_KEY || "",
+      accessKeyId: process.env.CF_ACCESS_KEY_ID || "",
+      accountId: process.env.CF_ACCOUNT_ID || "",
+      bucket: process.env.CF_R2_BUCKET || "",
+      secretAccessKey: process.env.CF_SECRET_ACCESS_KEY || "",
     }),
   }),
 });

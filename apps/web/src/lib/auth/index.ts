@@ -13,10 +13,12 @@ import {
   authRelations,
 } from "#/lib/db/schemas";
 
-const db = drizzle(Bun.env.DATABASE_URL ?? "", { relations: authRelations });
+const db = drizzle(process.env.DATABASE_URL ?? "", {
+  relations: authRelations,
+});
 
 export const auth = betterAuth({
-  baseURL: Bun.env.BETTER_AUTH_URL,
+  baseURL: process.env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { account, deviceCode, session, user, verification },
@@ -38,8 +40,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      clientId: Bun.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: Bun.env.GOOGLE_CLIENT_SECRET ?? "",
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     },
   },
 });

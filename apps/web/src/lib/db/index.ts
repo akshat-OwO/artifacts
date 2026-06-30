@@ -14,5 +14,5 @@ export const PgClientLive = PgClient.layer({
       return types.getTypeParser(typeId, format);
     },
   },
-  url: Redacted.make(Bun.env.DATABASE_URL || ""),
+  url: Redacted.make(process.env.DATABASE_URL || ""),
 });
