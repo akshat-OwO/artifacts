@@ -22,4 +22,16 @@ export class PreviewApi extends HttpApiGroup.make("preview")
       success: WebpImage,
     })
   )
+  .add(
+    HttpApiEndpoint.post("captureAsync", "/preview", {
+      error: PreviewError,
+      payload: Schema.Struct({
+        url: Schema.String,
+        webhookUrl: Schema.String,
+      }),
+      success: Schema.Struct({
+        message: Schema.String,
+      }),
+    })
+  )
   .middleware(ApiKeyAuth) {}

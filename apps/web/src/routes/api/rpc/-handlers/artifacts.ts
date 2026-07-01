@@ -40,15 +40,6 @@ const getRequestFormData = (request: Request) =>
     try: () => request.formData(),
   });
 
-const summarizeUrl = (url: string): string => {
-  try {
-    const parsedUrl = new URL(url);
-    return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? "?..." : ""}`;
-  } catch {
-    return "[invalid-url]";
-  }
-};
-
 const captureArtifactPreview = ({
   artifactId,
   artifactKey,
@@ -59,54 +50,18 @@ const captureArtifactPreview = ({
   userId: string;
 }) =>
   Effect.gen(function* capturePreview() {
-    yield* Effect.logInfo("Artifact preview capture started", {
-      artifactId,
-      artifactKey,
-      source: "update",
-      userId,
-    });
-    const db = yield* PgDrizzle.makeWithDefaults();
     const scoutApi = yield* ScoutApiService;
     const storage = yield* Storage;
     const previewUrl = yield* Effect.promise(() => storage.r2.url(artifactKey));
-    yield* Effect.logInfo("Artifact preview URL resolved", {
+    yield* scoutApi.scheduleCapture({
       artifactId,
-      previewUrl: summarizeUrl(previewUrl),
-      source: "update",
-    });
-    const preview = yield* scoutApi.getCapture(previewUrl);
-    yield* Effect.logInfo("Artifact preview captured by scout", {
-      artifactId,
-      previewBytes: preview.byteLength,
-      source: "update",
-    });
-    const previewKey = `artifacts/${userId}/${artifactId}/preview`;
-
-    yield* Effect.promise(() =>
-      storage.r2.upload(previewKey, preview, {
-        contentType: "image/webp",
-        metadata: { artifactId, userId },
-      })
-    );
-    yield* Effect.logInfo("Artifact preview uploaded", {
-      artifactId,
-      previewKey,
-      source: "update",
-    });
-
-    yield* db
-      .update(artifact)
-      .set({ previewKey })
-      .where(and(eq(artifact.id, artifactId), eq(artifact.userId, userId)));
-    yield* Effect.logInfo("Artifact preview DB updated", {
-      artifactId,
-      previewKey,
-      source: "update",
+      url: previewUrl,
+      userId,
     });
   }).pipe(
-    Effect.provide(Layer.mergeAll(ScoutApiLive, StorageLive, PgClientLive)),
+    Effect.provide(Layer.mergeAll(ScoutApiLive, StorageLive)),
     Effect.catchCause((cause) =>
-      Effect.logError("Failed to generate artifact preview", cause)
+      Effect.logError("Failed to schedule artifact preview", cause)
     )
   );
 
@@ -345,12 +300,6 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
               });
 
           if (updateResult.previewArtifactKey) {
-            yield* Effect.logInfo("Artifact preview capture scheduled", {
-              artifactId,
-              artifactKey: updateResult.previewArtifactKey,
-              source: "update",
-              userId: user.id,
-            });
             yield* Effect.forkDetach(
               captureArtifactPreview({
                 artifactId,
