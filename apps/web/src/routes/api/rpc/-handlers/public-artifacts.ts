@@ -12,6 +12,14 @@ import { Storage, StorageLive } from "#/lib/storage";
 
 import { Api } from "../-api";
 
+const DEFAULT_LOCAL_BASE_URL = "http://localhost:3000";
+
+const getPublicAssetUrl = (assetPath: string) =>
+  new URL(
+    assetPath,
+    process.env.VITE_BASE_URL ?? DEFAULT_LOCAL_BASE_URL
+  ).toString();
+
 export const PublicArtifactsApiHandler = HttpApiBuilder.group(
   Api,
   "publicArtifacts",
@@ -47,7 +55,7 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
 
           const previewImageUrl =
             previewKey === DEFAULT_ARTIFACT_PREVIEW_KEY
-              ? null
+              ? getPublicAssetUrl(DEFAULT_ARTIFACT_PREVIEW_KEY)
               : yield* Effect.tryPromise({
                   catch: () => new PreviewError(),
                   try: () => storage.r2.url(previewKey),
