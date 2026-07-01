@@ -43,20 +43,8 @@ const previewOperation = <A>(
     try: evaluate,
   });
 
-const summarizeUrl = (url: string): string => {
-  try {
-    const parsedUrl = new URL(url);
-    return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? "?..." : ""}`;
-  } catch {
-    return "[invalid-url]";
-  }
-};
-
 const generatePreview = (url: string) =>
   Effect.gen(function* captureScreenshot() {
-    yield* Effect.logInfo("Scout preview generation started", {
-      url: summarizeUrl(url),
-    });
     const browser = yield* Browser;
     const page = yield* Effect.acquireRelease(
       previewOperation("Create browser page", () =>
@@ -64,9 +52,6 @@ const generatePreview = (url: string) =>
       ),
       closePage
     );
-    yield* Effect.logInfo("Scout browser page created", {
-      url: summarizeUrl(url),
-    });
 
     yield* previewOperation("Navigate to preview URL", () =>
       page.goto(url, {
@@ -74,26 +59,14 @@ const generatePreview = (url: string) =>
         waitUntil: "load",
       })
     );
-    yield* Effect.logInfo("Scout preview URL loaded", {
-      url: summarizeUrl(url),
-    });
 
     const screenshot = yield* previewOperation("Capture screenshot", () =>
       page.screenshot({ type: "png" })
     );
-    yield* Effect.logInfo("Scout screenshot captured", {
-      bytes: screenshot.byteLength,
-      url: summarizeUrl(url),
-    });
 
-    const webp = yield* previewOperation("Convert screenshot to WebP", () =>
+    return yield* previewOperation("Convert screenshot to WebP", () =>
       new Bun.Image(screenshot).webp().bytes()
     );
-    yield* Effect.logInfo("Scout screenshot converted to WebP", {
-      bytes: webp.byteLength,
-      url: summarizeUrl(url),
-    });
-    return webp;
   }).pipe(
     Effect.scoped,
     Effect.tapCause((cause) =>
@@ -106,16 +79,8 @@ const generatePreview = (url: string) =>
 
 const createPreview = (url: string) =>
   Effect.gen(function* serializePreview() {
-    yield* Effect.logInfo("Scout preview capture queued", {
-      url: summarizeUrl(url),
-    });
     const lock = yield* PreviewLock;
-    const preview = yield* lock.withPermit(generatePreview(url));
-    yield* Effect.logInfo("Scout preview capture completed", {
-      bytes: preview.byteLength,
-      url: summarizeUrl(url),
-    });
-    return preview;
+    return yield* lock.withPermit(generatePreview(url));
   });
 
 export const PreviewApiHandler = HttpApiBuilder.group(

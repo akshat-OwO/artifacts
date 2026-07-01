@@ -13,15 +13,6 @@ import {
 } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
 
-const summarizeUrl = (url: string): string => {
-  try {
-    const parsedUrl = new URL(url);
-    return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? "?..." : ""}`;
-  } catch {
-    return "[invalid-url]";
-  }
-};
-
 const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
   const apiKey = yield* Config.redacted("SCOUT_API_KEY");
   const baseUrl = yield* Config.string("SCOUT_BASE_URL");
@@ -41,18 +32,7 @@ const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
   });
 
   const getCapture = Effect.fn("artifacts/scoutApi/getCapture")((url: string) =>
-    Effect.gen(function* capture() {
-      yield* Effect.logInfo("Scout capture request started", {
-        baseUrl,
-        url: summarizeUrl(url),
-      });
-      const capturedPreview = yield* client.preview.capture({ query: { url } });
-      yield* Effect.logInfo("Scout capture request completed", {
-        bytes: capturedPreview.byteLength,
-        url: summarizeUrl(url),
-      });
-      return capturedPreview;
-    })
+    client.preview.capture({ query: { url } })
   );
 
   return { getCapture } as const;
