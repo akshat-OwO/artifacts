@@ -1,19 +1,18 @@
 import "@tanstack/react-start/server-only";
-import { Api as ScoutApi } from "@artifacts/scout/api";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import * as Schedule from "effect/Schedule";
 import {
   FetchHttpClient,
   HttpClient,
   HttpClientRequest,
+  HttpClientResponse,
 } from "effect/unstable/http";
-import { HttpApiClient } from "effect/unstable/httpapi";
 
 const DEFAULT_LOCAL_BASE_URL = "http://localhost:3000";
+const SCOUT_SCHEDULE_TIMEOUT = "10 seconds";
 
 const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
   const apiKey = yield* Config.redacted("SCOUT_API_KEY");
@@ -22,19 +21,7 @@ const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
     Config.withDefault(DEFAULT_LOCAL_BASE_URL)
   );
 
-  const client = yield* HttpApiClient.make(ScoutApi, {
-    baseUrl,
-    transformClient: (httpClient) =>
-      httpClient.pipe(
-        HttpClient.mapRequest(
-          HttpClientRequest.setHeader("X-API-KEY", Redacted.value(apiKey))
-        ),
-        HttpClient.retryTransient({
-          schedule: Schedule.exponential(100),
-          times: 3,
-        })
-      ),
-  });
+  const httpClient = yield* HttpClient.HttpClient;
 
   const scheduleCapture = Effect.fn("artifacts/scoutApi/scheduleCapture")(({
     artifactId,
@@ -49,10 +36,16 @@ const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
       `/api/rpc/artifacts/${artifactId}/preview-webhook/${userId}`,
       serverBaseUrl
     ).toString();
+    const previewUrl = new URL("/preview", baseUrl).toString();
 
-    return client.preview.captureAsync({
-      payload: { url, webhookUrl },
-    });
+    return HttpClientRequest.post(previewUrl).pipe(
+      HttpClientRequest.setHeader("X-API-KEY", Redacted.value(apiKey)),
+      HttpClientRequest.bodyJsonUnsafe({ url, webhookUrl }),
+      httpClient.execute,
+      Effect.flatMap(HttpClientResponse.filterStatusOk),
+      Effect.asVoid,
+      Effect.timeout(SCOUT_SCHEDULE_TIMEOUT)
+    );
   });
 
   return { scheduleCapture } as const;

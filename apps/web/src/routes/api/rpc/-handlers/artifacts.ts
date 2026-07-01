@@ -58,6 +58,11 @@ const captureArtifactPreview = ({
       url: previewUrl,
       userId,
     });
+    yield* Effect.logInfo("Scheduled artifact preview with scout", {
+      artifactId,
+      source: "update",
+      userId,
+    });
   }).pipe(
     Effect.provide(Layer.mergeAll(ScoutApiLive, StorageLive)),
     Effect.catchCause((cause) =>
