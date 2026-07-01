@@ -13,15 +13,18 @@ import {
 } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
 
-const DEFAULT_LOCAL_BASE_URL = "http://localhost:3000";
+const summarizeUrl = (url: string): string => {
+  try {
+    const parsedUrl = new URL(url);
+    return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? "?..." : ""}`;
+  } catch {
+    return "[invalid-url]";
+  }
+};
 
 const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
   const apiKey = yield* Config.redacted("SCOUT_API_KEY");
   const baseUrl = yield* Config.string("SCOUT_BASE_URL");
-  const serverBaseUrl = yield* Config.string("SERVER_BASE_URL").pipe(
-    Config.orElse(() => Config.string("VITE_BASE_URL")),
-    Config.withDefault(DEFAULT_LOCAL_BASE_URL)
-  );
 
   const client = yield* HttpApiClient.make(ScoutApi, {
     baseUrl,
@@ -37,26 +40,22 @@ const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
       ),
   });
 
-  const scheduleCapture = Effect.fn("artifacts/scoutApi/scheduleCapture")(({
-    artifactId,
-    url,
-    userId,
-  }: {
-    artifactId: string;
-    url: string;
-    userId: string;
-  }) => {
-    const webhookUrl = new URL(
-      `/api/rpc/artifacts/${artifactId}/preview-webhook/${userId}`,
-      serverBaseUrl
-    ).toString();
+  const getCapture = Effect.fn("artifacts/scoutApi/getCapture")((url: string) =>
+    Effect.gen(function* capture() {
+      yield* Effect.logInfo("Scout capture request started", {
+        baseUrl,
+        url: summarizeUrl(url),
+      });
+      const capturedPreview = yield* client.preview.capture({ query: { url } });
+      yield* Effect.logInfo("Scout capture request completed", {
+        bytes: capturedPreview.byteLength,
+        url: summarizeUrl(url),
+      });
+      return capturedPreview;
+    })
+  );
 
-    return client.preview.captureAsync({
-      payload: { url, webhookUrl },
-    });
-  });
-
-  return { scheduleCapture } as const;
+  return { getCapture } as const;
 });
 
 export class ScoutApiService extends Context.Service<

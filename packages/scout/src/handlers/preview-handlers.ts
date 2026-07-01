@@ -1,12 +1,4 @@
-import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import * as Redacted from "effect/Redacted";
-import {
-  FetchHttpClient,
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse,
-} from "effect/unstable/http";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 import type { Page } from "playwright";
 
@@ -51,8 +43,20 @@ const previewOperation = <A>(
     try: evaluate,
   });
 
+const summarizeUrl = (url: string): string => {
+  try {
+    const parsedUrl = new URL(url);
+    return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? "?..." : ""}`;
+  } catch {
+    return "[invalid-url]";
+  }
+};
+
 const generatePreview = (url: string) =>
   Effect.gen(function* captureScreenshot() {
+    yield* Effect.logInfo("Scout preview generation started", {
+      url: summarizeUrl(url),
+    });
     const browser = yield* Browser;
     const page = yield* Effect.acquireRelease(
       previewOperation("Create browser page", () =>
@@ -60,6 +64,9 @@ const generatePreview = (url: string) =>
       ),
       closePage
     );
+    yield* Effect.logInfo("Scout browser page created", {
+      url: summarizeUrl(url),
+    });
 
     yield* previewOperation("Navigate to preview URL", () =>
       page.goto(url, {
@@ -67,14 +74,26 @@ const generatePreview = (url: string) =>
         waitUntil: "load",
       })
     );
+    yield* Effect.logInfo("Scout preview URL loaded", {
+      url: summarizeUrl(url),
+    });
 
     const screenshot = yield* previewOperation("Capture screenshot", () =>
       page.screenshot({ type: "png" })
     );
+    yield* Effect.logInfo("Scout screenshot captured", {
+      bytes: screenshot.byteLength,
+      url: summarizeUrl(url),
+    });
 
-    return yield* previewOperation("Convert screenshot to WebP", () =>
+    const webp = yield* previewOperation("Convert screenshot to WebP", () =>
       new Bun.Image(screenshot).webp().bytes()
     );
+    yield* Effect.logInfo("Scout screenshot converted to WebP", {
+      bytes: webp.byteLength,
+      url: summarizeUrl(url),
+    });
+    return webp;
   }).pipe(
     Effect.scoped,
     Effect.tapCause((cause) =>
@@ -87,63 +106,21 @@ const generatePreview = (url: string) =>
 
 const createPreview = (url: string) =>
   Effect.gen(function* serializePreview() {
+    yield* Effect.logInfo("Scout preview capture queued", {
+      url: summarizeUrl(url),
+    });
     const lock = yield* PreviewLock;
-    return yield* lock.withPermit(generatePreview(url));
-  });
-
-const postPreviewWebhook = ({
-  apiKey,
-  preview,
-  webhookUrl,
-}: {
-  apiKey: Redacted.Redacted<string>;
-  preview: Uint8Array;
-  webhookUrl: string;
-}) =>
-  HttpClientRequest.post(webhookUrl).pipe(
-    HttpClientRequest.setHeader("X-API-KEY", Redacted.value(apiKey)),
-    HttpClientRequest.bodyUint8Array(preview, "image/webp"),
-    HttpClient.execute,
-    Effect.flatMap(HttpClientResponse.filterStatusOk),
-    Effect.asVoid
-  );
-
-const createPreviewJob = ({
-  url,
-  webhookUrl,
-}: {
-  url: string;
-  webhookUrl: string;
-}) =>
-  Effect.gen(function* schedulePreviewJob() {
-    const apiKey = yield* Config.redacted("API_KEY").pipe(
-      Effect.mapError(
-        (cause) =>
-          new PreviewError({
-            message: `Read webhook API key: ${cause.message}`,
-          })
-      )
-    );
-    const job = Effect.gen(function* captureAndNotify() {
-      const preview = yield* createPreview(url);
-      yield* postPreviewWebhook({ apiKey, preview, webhookUrl });
-    }).pipe(
-      Effect.provide(FetchHttpClient.layer),
-      Effect.catchCause((cause) =>
-        Effect.logError("Scout async preview job failed", cause)
-      )
-    );
-
-    yield* Effect.forkDetach(job);
-
-    return { message: "Preview capture scheduled." };
+    const preview = yield* lock.withPermit(generatePreview(url));
+    yield* Effect.logInfo("Scout preview capture completed", {
+      bytes: preview.byteLength,
+      url: summarizeUrl(url),
+    });
+    return preview;
   });
 
 export const PreviewApiHandler = HttpApiBuilder.group(
   Api,
   "preview",
   (handlers) =>
-    handlers
-      .handle("capture", ({ query }) => createPreview(query.url))
-      .handle("captureAsync", ({ payload }) => createPreviewJob(payload))
+    handlers.handle("capture", ({ query }) => createPreview(query.url))
 );
