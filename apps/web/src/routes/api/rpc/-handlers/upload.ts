@@ -15,10 +15,10 @@ import {
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
 import { InvalidFileTypeError } from "#/lib/errors/upload/invalid-file";
 import { UsageLimitExceededError } from "#/lib/errors/upload/usage-limit";
+import { ScoutApiLive, ScoutApiService } from "#/lib/scout";
 import { Storage, StorageLive } from "#/lib/storage";
 
 import { Api } from "../-api";
-import { captureArtifactPreview } from "./artifacts";
 
 const HTML_FILE_TYPES = new Set(["text/html", "application/xhtml+xml"]);
 
@@ -37,6 +37,15 @@ const getRequestFormData = (request: Request) =>
     catch: () => new FileUploadError(),
     try: () => request.formData(),
   });
+
+const summarizeUrl = (url: string): string => {
+  try {
+    const parsedUrl = new URL(url);
+    return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? "?..." : ""}`;
+  } catch {
+    return "[invalid-url]";
+  }
+};
 
 export const UploadApiHandler = HttpApiBuilder.group(
   Api,
@@ -117,11 +126,69 @@ export const UploadApiHandler = HttpApiBuilder.group(
           })
         );
 
-        yield* captureArtifactPreview({
+        const capturePreview = Effect.gen(function* capturePreview() {
+          yield* Effect.logInfo("Artifact preview capture started", {
+            artifactId,
+            artifactKey: uploadedFile.key,
+            source: "upload",
+            userId: user.id,
+          });
+          const backgroundDb = yield* PgDrizzle.makeWithDefaults();
+          const scoutApi = yield* ScoutApiService;
+          const backgroundStorage = yield* Storage;
+          const previewUrl = yield* Effect.promise(() =>
+            backgroundStorage.r2.url(uploadedFile.key)
+          );
+          yield* Effect.logInfo("Artifact preview URL resolved", {
+            artifactId,
+            previewUrl: summarizeUrl(previewUrl),
+            source: "upload",
+          });
+          const preview = yield* scoutApi.getCapture(previewUrl);
+          yield* Effect.logInfo("Artifact preview captured by scout", {
+            artifactId,
+            previewBytes: preview.byteLength,
+            source: "upload",
+          });
+          const previewKey = `artifacts/${user.id}/${artifactId}/preview`;
+
+          yield* Effect.promise(() =>
+            backgroundStorage.r2.upload(previewKey, preview, {
+              contentType: "image/webp",
+              metadata: { artifactId, userId: user.id },
+            })
+          );
+          yield* Effect.logInfo("Artifact preview uploaded", {
+            artifactId,
+            previewKey,
+            source: "upload",
+          });
+
+          yield* backgroundDb
+            .update(artifact)
+            .set({ previewKey })
+            .where(eq(artifact.id, artifactId));
+          yield* Effect.logInfo("Artifact preview DB updated", {
+            artifactId,
+            previewKey,
+            source: "upload",
+          });
+        }).pipe(
+          Effect.provide(
+            Layer.mergeAll(ScoutApiLive, StorageLive, PgClientLive)
+          ),
+          Effect.catchCause((cause) =>
+            Effect.logError("Failed to generate artifact preview", cause)
+          )
+        );
+
+        yield* Effect.logInfo("Artifact preview capture scheduled", {
           artifactId,
           artifactKey: uploadedFile.key,
+          source: "upload",
           userId: user.id,
         });
+        yield* Effect.forkDetach(capturePreview);
 
         return {
           data: { id: artifactId },
