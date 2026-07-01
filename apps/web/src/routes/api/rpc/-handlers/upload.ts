@@ -127,17 +127,24 @@ export const UploadApiHandler = HttpApiBuilder.group(
           const preview = yield* scoutApi.getCapture(previewUrl);
           const previewKey = `artifacts/${user.id}/${artifactId}/preview`;
 
+          yield* Effect.log("Captured preview", { previewKey });
           yield* Effect.promise(() =>
             backgroundStorage.r2.upload(previewKey, preview, {
               contentType: "image/webp",
               metadata: { artifactId, userId: user.id },
             })
           );
+          yield* Effect.log("Uploaded preview", { previewKey });
 
           yield* backgroundDb
             .update(artifact)
             .set({ previewKey })
             .where(eq(artifact.id, artifactId));
+
+          yield* Effect.log("Updated artifact preview key", {
+            artifactId,
+            previewKey,
+          });
         }).pipe(
           Effect.provide(
             Layer.mergeAll(ScoutApiLive, StorageLive, PgClientLive)
@@ -147,7 +154,9 @@ export const UploadApiHandler = HttpApiBuilder.group(
           )
         );
 
+        yield* Effect.log("Running detached preview capture");
         yield* Effect.forkDetach(capturePreview);
+        yield* Effect.log("Detached preview capture started");
 
         return {
           data: { id: artifactId },
