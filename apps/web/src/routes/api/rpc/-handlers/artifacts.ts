@@ -300,13 +300,11 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
               });
 
           if (updateResult.previewArtifactKey) {
-            yield* Effect.forkDetach(
-              captureArtifactPreview({
-                artifactId,
-                artifactKey: updateResult.previewArtifactKey,
-                userId: user.id,
-              })
-            );
+            yield* captureArtifactPreview({
+              artifactId,
+              artifactKey: updateResult.previewArtifactKey,
+              userId: user.id,
+            });
           }
 
           return { author: user.name, ...updateResult.artifact };

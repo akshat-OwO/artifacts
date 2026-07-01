@@ -117,7 +117,7 @@ export const UploadApiHandler = HttpApiBuilder.group(
           })
         );
 
-        const capturePreview = Effect.gen(function* capturePreview() {
+        const schedulePreview = Effect.gen(function* schedulePreview() {
           const scoutApi = yield* ScoutApiService;
           const backgroundStorage = yield* Storage;
           const previewUrl = yield* Effect.promise(() =>
@@ -135,7 +135,7 @@ export const UploadApiHandler = HttpApiBuilder.group(
           )
         );
 
-        yield* Effect.forkDetach(capturePreview);
+        yield* schedulePreview;
 
         return {
           data: { id: artifactId },
