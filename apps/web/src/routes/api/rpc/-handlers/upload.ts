@@ -15,10 +15,10 @@ import {
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
 import { InvalidFileTypeError } from "#/lib/errors/upload/invalid-file";
 import { UsageLimitExceededError } from "#/lib/errors/upload/usage-limit";
-import { ScoutApiLive, ScoutApiService } from "#/lib/scout";
 import { Storage, StorageLive } from "#/lib/storage";
 
 import { Api } from "../-api";
+import { captureArtifactPreview } from "./artifacts";
 
 const HTML_FILE_TYPES = new Set(["text/html", "application/xhtml+xml"]);
 
@@ -117,37 +117,11 @@ export const UploadApiHandler = HttpApiBuilder.group(
           })
         );
 
-        const capturePreview = Effect.gen(function* capturePreview() {
-          const backgroundDb = yield* PgDrizzle.makeWithDefaults();
-          const scoutApi = yield* ScoutApiService;
-          const backgroundStorage = yield* Storage;
-          const previewUrl = yield* Effect.promise(() =>
-            backgroundStorage.r2.url(uploadedFile.key)
-          );
-          const preview = yield* scoutApi.getCapture(previewUrl);
-          const previewKey = `artifacts/${user.id}/${artifactId}/preview`;
-
-          yield* Effect.promise(() =>
-            backgroundStorage.r2.upload(previewKey, preview, {
-              contentType: "image/webp",
-              metadata: { artifactId, userId: user.id },
-            })
-          );
-
-          yield* backgroundDb
-            .update(artifact)
-            .set({ previewKey })
-            .where(eq(artifact.id, artifactId));
-        }).pipe(
-          Effect.provide(
-            Layer.mergeAll(ScoutApiLive, StorageLive, PgClientLive)
-          ),
-          Effect.catchCause((cause) =>
-            Effect.logError("Failed to generate artifact preview", cause)
-          )
-        );
-
-        yield* Effect.forkDetach(capturePreview);
+        yield* captureArtifactPreview({
+          artifactId,
+          artifactKey: uploadedFile.key,
+          userId: user.id,
+        });
 
         return {
           data: { id: artifactId },
