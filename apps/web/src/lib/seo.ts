@@ -30,7 +30,7 @@ export const artifactPageHead = ({
 }) => {
   const title = pageTitle(name);
   const description = shared
-    ? `View the shared "${name}" artifact${author ? `by ${author}.` : "."}`
+    ? `View the shared "${name}" artifact${author ? ` by ${author}.` : "."}`
     : `Preview and share the "${name}" artifact.`;
 
   return createPageHead({
