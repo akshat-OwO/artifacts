@@ -128,11 +128,6 @@ export const UploadApiHandler = HttpApiBuilder.group(
             url: previewUrl,
             userId: user.id,
           });
-          yield* Effect.logInfo("Scheduled artifact preview with scout", {
-            artifactId,
-            source: "upload",
-            userId: user.id,
-          });
         }).pipe(
           Effect.provide(Layer.mergeAll(ScoutApiLive, StorageLive)),
           Effect.catchCause((cause) =>
