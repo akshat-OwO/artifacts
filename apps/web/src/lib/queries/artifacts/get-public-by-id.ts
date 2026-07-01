@@ -21,7 +21,12 @@ export const getPublicArtifactByIdOptions = (artifactId: string) =>
           SchemaError: () => Effect.fail("Invalid artifact ID"),
         }),
         Effect.catchTag(
-          ["EffectDrizzleQueryError", "HttpClientError", "SqlError"],
+          [
+            "EffectDrizzleQueryError",
+            "HttpClientError",
+            "PreviewError",
+            "SqlError",
+          ],
           () => Effect.fail("Something went wrong")
         ),
         Effect.provide(ApiClient.layer)

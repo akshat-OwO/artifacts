@@ -13,6 +13,7 @@ interface PublicArtifactRouteHeadData {
   artifact?: {
     author?: string | null;
     name: string;
+    previewImageUrl?: string | null;
   };
 }
 
@@ -44,6 +45,9 @@ export const Route = createFileRoute("/s/$artifactId")({
     artifactPageHead({
       ...(loaderData?.artifact?.author
         ? { author: loaderData.artifact.author }
+        : {}),
+      ...(loaderData?.artifact?.previewImageUrl
+        ? { image: loaderData.artifact.previewImageUrl }
         : {}),
       name: loaderData?.artifact?.name ?? "Artifact",
       shared: true,

@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { PgClientLive } from "#/lib/db";
-import { artifact, user } from "#/lib/db/schemas";
+import { artifact, DEFAULT_ARTIFACT_PREVIEW_KEY, user } from "#/lib/db/schemas";
 import { ArtifactNotFoundError } from "#/lib/errors/artifacts/artifact-not-found";
 import { PreviewError } from "#/lib/errors/artifacts/preview-error";
 import { Storage, StorageLive } from "#/lib/storage";
@@ -20,6 +20,7 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
       .handle("getPublicArtifactById", ({ params: { artifactId } }) =>
         Effect.gen(function* handler() {
           const db = yield* PgDrizzle.makeWithDefaults();
+          const storage = yield* Storage;
 
           const [artifactRow] = yield* db
             .select({
@@ -28,6 +29,7 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
               createdAt: artifact.createdAt,
               id: artifact.id,
               name: artifact.name,
+              previewKey: artifact.previewKey,
               updatedAt: artifact.updatedAt,
             })
             .from(artifact)
@@ -41,8 +43,18 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
             return yield* new ArtifactNotFoundError();
           }
 
-          return artifactRow;
-        }).pipe(Effect.provide(PgClientLive))
+          const { previewKey, ...publicArtifact } = artifactRow;
+
+          const previewImageUrl =
+            previewKey === DEFAULT_ARTIFACT_PREVIEW_KEY
+              ? null
+              : yield* Effect.tryPromise({
+                  catch: () => new PreviewError(),
+                  try: () => storage.r2.url(previewKey),
+                });
+
+          return { ...publicArtifact, previewImageUrl };
+        }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
       )
       .handle("getPublicArtifactPreviewByKey", ({ params: { artifactKey } }) =>
         Effect.gen(function* handler() {

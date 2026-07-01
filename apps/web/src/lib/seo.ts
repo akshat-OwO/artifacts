@@ -14,29 +14,37 @@ export const SETTINGS_PAGE_TITLE = pageTitle("Settings");
 interface PageHeadOptions {
   title: string;
   description?: string;
+  image?: string | null;
 }
 
 export const artifactPageHead = ({
   author,
+  image,
   name,
   shared = false,
 }: {
   author?: string;
+  image?: string | null;
   name: string;
   shared?: boolean;
 }) => {
   const title = pageTitle(name);
   const description = shared
-    ? `View the shared "${name}" artifact${author ? `by ${author}.` : "."}`
+    ? `View the shared "${name}" artifact${author ? ` by ${author}.` : "."}`
     : `Preview and share the "${name}" artifact.`;
 
   return createPageHead({
     description,
+    ...(image ? { image } : {}),
     title,
   });
 };
 
-export const createPageHead = ({ title, description }: PageHeadOptions) => ({
+export const createPageHead = ({
+  title,
+  description,
+  image,
+}: PageHeadOptions) => ({
   meta: [
     { title },
     ...(description ? [{ content: description, name: "description" }] : []),
@@ -45,10 +53,15 @@ export const createPageHead = ({ title, description }: PageHeadOptions) => ({
       ? [{ content: description, property: "og:description" }]
       : []),
     { content: SITE_NAME, property: "og:site_name" },
-    { content: "summary", name: "twitter:card" },
+    ...(image ? [{ content: image, property: "og:image" }] : []),
+    {
+      content: image ? "summary_large_image" : "summary",
+      name: "twitter:card",
+    },
     { content: title, name: "twitter:title" },
     ...(description
       ? [{ content: description, name: "twitter:description" }]
       : []),
+    ...(image ? [{ content: image, name: "twitter:image" }] : []),
   ],
 });
