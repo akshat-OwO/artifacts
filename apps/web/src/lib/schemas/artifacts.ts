@@ -17,5 +17,6 @@ export const GetPublicArtifactById = Schema.Struct({
   createdAt: Schema.Date,
   id: Schema.String.check(Schema.isUUID()),
   name: Schema.String,
+  previewImageUrl: Schema.NullOr(Schema.String),
   updatedAt: Schema.Date,
 });

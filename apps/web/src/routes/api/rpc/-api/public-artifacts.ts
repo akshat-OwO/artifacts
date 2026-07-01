@@ -13,7 +13,12 @@ export class PublicArtifactsApi extends HttpApiGroup.make("publicArtifacts")
       "getPublicArtifactById",
       "/public/artifacts/:artifactId",
       {
-        error: [EffectDrizzleQueryError, SqlError, ArtifactNotFoundError],
+        error: [
+          EffectDrizzleQueryError,
+          SqlError,
+          ArtifactNotFoundError,
+          PreviewError,
+        ],
         params: Schema.Struct({
           artifactId: Schema.String.check(Schema.isUUID()),
         }),
