@@ -18,7 +18,8 @@ const DEFAULT_LOCAL_BASE_URL = "http://localhost:3000";
 const makeScoutApiService = Effect.gen(function* makeScoutApiService() {
   const apiKey = yield* Config.redacted("SCOUT_API_KEY");
   const baseUrl = yield* Config.string("SCOUT_BASE_URL");
-  const serverBaseUrl = yield* Config.string("VITE_BASE_URL").pipe(
+  const serverBaseUrl = yield* Config.string("SERVER_BASE_URL").pipe(
+    Config.orElse(() => Config.string("VITE_BASE_URL")),
     Config.withDefault(DEFAULT_LOCAL_BASE_URL)
   );
 
