@@ -4,6 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import { ANALYTICS_EVENTS } from "#/lib/analytics/events";
+import { captureServerEvent } from "#/lib/analytics/server";
 import { AuthUser } from "#/lib/auth/context";
 import { PgClientLive } from "#/lib/db";
 import { artifact } from "#/lib/db/schemas";
@@ -148,6 +150,15 @@ export const UploadApiHandler = HttpApiBuilder.group(
         );
 
         yield* Effect.forkDetach(capturePreview);
+        yield* captureServerEvent({
+          distinctId: user.id,
+          event: ANALYTICS_EVENTS.artifactUploaded,
+          properties: {
+            artifact_id: artifactId,
+            artifact_size_bytes: file.size,
+            source: "api",
+          },
+        });
 
         return {
           data: { id: artifactId },

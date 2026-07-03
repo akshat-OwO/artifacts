@@ -13,12 +13,14 @@ interface LoginDialogProps {
   onOpenChange: (open: boolean) => void;
   open: boolean;
   redirectTo: string | undefined;
+  onClickCapture: () => void;
 }
 
 export const LoginDialog = ({
   onOpenChange,
   open,
   redirectTo,
+  onClickCapture,
 }: LoginDialogProps) => (
   <Dialog onOpenChange={onOpenChange} open={open}>
     <DialogPopup>
@@ -32,7 +34,14 @@ export const LoginDialog = ({
         <Button onClick={() => onOpenChange(false)} variant="outline">
           Cancel
         </Button>
-        <Button onClick={() => signInWithGoogle(redirectTo)}>Login</Button>
+        <Button
+          onClick={() => {
+            onClickCapture();
+            void signInWithGoogle(redirectTo);
+          }}
+        >
+          Login
+        </Button>
       </DialogFooter>
     </DialogPopup>
   </Dialog>

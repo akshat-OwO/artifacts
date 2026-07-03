@@ -5,6 +5,7 @@ import {
   Share08Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { usePostHog } from "@posthog/react";
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type React from "react";
@@ -38,6 +39,7 @@ import {
 } from "#/components/ui/input-group";
 import { MenuItem, MenuSeparator } from "#/components/ui/menu";
 import { toastManager } from "#/components/ui/toast";
+import { ANALYTICS_EVENTS, captureClientEvent } from "#/lib/analytics/client";
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
 import {
   deleteArtifactMutation,
@@ -91,6 +93,7 @@ export const ArtifactActionsProvider = ({
   artifactId,
   children,
 }: ArtifactActionsProviderProps) => {
+  const posthog = usePostHog();
   const nameInputId = useId();
   const shareUrlInputId = useId();
   const [editOpen, setEditOpen] = useState(false);
@@ -127,6 +130,11 @@ export const ArtifactActionsProvider = ({
 
       updateArtifact(updateInput, {
         onSuccess: () => {
+          captureClientEvent(posthog, ANALYTICS_EVENTS.artifactUpdated, {
+            artifact_id: artifactId,
+            file_replaced: Boolean(file),
+            name_changed: trimmedName !== artifact.name,
+          });
           setEditOpen(false);
         },
       });
@@ -171,6 +179,12 @@ export const ArtifactActionsProvider = ({
   };
 
   const handleShareClick = () => {
+    captureClientEvent(posthog, ANALYTICS_EVENTS.artifactShared, {
+      action: "open-share",
+      already_public: Boolean(artifact?.isPublic),
+      artifact_id: artifactId,
+    });
+
     if (artifact?.isPublic) {
       setShareOpen(true);
       return;
@@ -184,6 +198,10 @@ export const ArtifactActionsProvider = ({
       { artifactId, isPublic: true },
       {
         onSuccess: () => {
+          captureClientEvent(posthog, ANALYTICS_EVENTS.artifactShared, {
+            action: "make-public",
+            artifact_id: artifactId,
+          });
           setConfirmPublicOpen(false);
           setShareOpen(true);
         },
@@ -196,6 +214,9 @@ export const ArtifactActionsProvider = ({
       { artifactId, isPublic: false },
       {
         onSuccess: () => {
+          captureClientEvent(posthog, ANALYTICS_EVENTS.artifactUnshared, {
+            artifact_id: artifactId,
+          });
           setConfirmPrivateOpen(false);
           setShareOpen(false);
         },
@@ -206,6 +227,9 @@ export const ArtifactActionsProvider = ({
   const handleCopyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(getShareUrl(artifactId));
+      captureClientEvent(posthog, ANALYTICS_EVENTS.artifactShareLinkCopied, {
+        artifact_id: artifactId,
+      });
       toastManager.add({
         description: "Share link copied to clipboard.",
         id: ARTIFACT_SHARE_COPY_DEDUP_ID,
@@ -403,7 +427,13 @@ export const ArtifactActionsProvider = ({
             </AlertDialogClose>
             <Button
               loading={isDeleting}
-              onClick={() => deleteArtifact(artifactId)}
+              onClick={() => {
+                captureClientEvent(posthog, ANALYTICS_EVENTS.artifactDeleted, {
+                  action: "confirm-delete",
+                  artifact_id: artifactId,
+                });
+                deleteArtifact(artifactId);
+              }}
               variant="destructive"
             >
               Delete

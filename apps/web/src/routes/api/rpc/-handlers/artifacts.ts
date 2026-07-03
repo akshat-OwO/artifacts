@@ -4,6 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
+import { ANALYTICS_EVENTS } from "#/lib/analytics/events";
+import { captureServerEvent } from "#/lib/analytics/server";
 import { AuthUser } from "#/lib/auth/context";
 import { PgClientLive } from "#/lib/db";
 import { artifact, DEFAULT_ARTIFACT_PREVIEW_KEY } from "#/lib/db/schemas";
@@ -319,6 +321,17 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
             );
           }
 
+          yield* captureServerEvent({
+            distinctId: user.id,
+            event: ANALYTICS_EVENTS.artifactUpdated,
+            properties: {
+              artifact_id: artifactId,
+              file_replaced: Boolean(file),
+              name_changed: Boolean(name),
+              source: "api",
+            },
+          });
+
           return { author: user.name, ...updateResult.artifact };
         }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
       )
@@ -348,6 +361,17 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
             if (!updatedArtifact) {
               return yield* new ArtifactNotFoundError();
             }
+
+            yield* captureServerEvent({
+              distinctId: user.id,
+              event: isPublic
+                ? ANALYTICS_EVENTS.artifactShared
+                : ANALYTICS_EVENTS.artifactUnshared,
+              properties: {
+                artifact_id: artifactId,
+                source: "api",
+              },
+            });
 
             return { author: user.name, ...updatedArtifact };
           }).pipe(Effect.provide(PgClientLive))
@@ -385,6 +409,15 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
               stopOnError: false,
             })
           );
+
+          yield* captureServerEvent({
+            distinctId: user.id,
+            event: ANALYTICS_EVENTS.artifactDeleted,
+            properties: {
+              artifact_id: artifactId,
+              source: "api",
+            },
+          });
 
           return { message: "Artifact deleted successfully." };
         }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))

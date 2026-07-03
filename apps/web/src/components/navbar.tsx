@@ -5,6 +5,7 @@ import {
   Menu01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { usePostHog } from "@posthog/react";
 import { Link, useMatch, useRouteContext } from "@tanstack/react-router";
 
 import {
@@ -25,9 +26,11 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "#/components/ui/menu";
+import { ANALYTICS_EVENTS, captureClientEvent } from "#/lib/analytics/client";
 import { signInWithGoogle } from "#/lib/auth/sign-in";
 
 const NavbarContent = () => {
+  const posthog = usePostHog();
   const { session } = useRouteContext({ from: "__root__" });
 
   const artifactsListPage = useMatch({
@@ -106,6 +109,9 @@ const NavbarContent = () => {
               <>
                 <Button
                   onClick={() => {
+                    captureClientEvent(posthog, ANALYTICS_EVENTS.loginStarted, {
+                      location: "navbar",
+                    });
                     void signInWithGoogle();
                   }}
                   size="xl"
@@ -151,6 +157,9 @@ const NavbarContent = () => {
               <>
                 <MenuItem
                   onClick={() => {
+                    captureClientEvent(posthog, ANALYTICS_EVENTS.loginStarted, {
+                      location: "mobile-navbar",
+                    });
                     void signInWithGoogle();
                   }}
                 >
