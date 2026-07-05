@@ -6,6 +6,7 @@ import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
 import * as Prompt from "effect/unstable/cli/Prompt";
 
+import { ANALYTICS_EVENTS } from "../../../../apps/web/src/lib/analytics/events";
 import { style, successMessage } from "../lib/cli-output";
 import { ApiClient } from "../services/api-client";
 
@@ -29,6 +30,11 @@ export const uploadCommand = Command.make(
     const {
       data: { id },
     } = yield* apiClient.uploadArtifact(path, Option.getOrUndefined(name));
+
+    yield* apiClient.captureCliEvent(ANALYTICS_EVENTS.cliArtifactUploaded, {
+      artifact_id: id,
+      name_provided: Option.isSome(name),
+    });
 
     yield* Console.log(successMessage("Artifact uploaded."));
     yield* Console.log(style.link(apiClient.artifactUrl(id)));

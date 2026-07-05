@@ -1,5 +1,6 @@
 import { FileCode, Plus } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { usePostHog } from "@posthog/react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouteContext, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
@@ -7,9 +8,11 @@ import { useDropzone } from "react-dropzone";
 
 import { LoginDialog } from "#/components/login-dialog";
 import { Spinner } from "#/components/ui/spinner";
+import { ANALYTICS_EVENTS, captureClientEvent } from "#/lib/analytics/client";
 import { uploadArtifactsMutations } from "#/lib/queries/upload/artifacts";
 
 export const Uploader = () => {
+  const posthog = usePostHog();
   const { session } = useRouteContext({ from: "__root__" });
   const { login, redirectTo } = useSearch({ from: "__root__" });
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
@@ -22,8 +25,16 @@ export const Uploader = () => {
       },
       disabled: isPending,
       onDrop: (files) => {
+        captureClientEvent(posthog, ANALYTICS_EVENTS.uploadDropped, {
+          file_count: files.length,
+          user_status: session ? "logged_in" : "anonymous",
+        });
+
         if (!session) {
           setLoginDialogOpen(true);
+          captureClientEvent(posthog, ANALYTICS_EVENTS.loginDialogShown, {
+            reason: "guest-upload",
+          });
           return;
         }
 
@@ -43,6 +54,13 @@ export const Uploader = () => {
 
     return uploadedFile ? uploadedFile.name : "Drag'n'drop html file here";
   })();
+
+  const captureLoginEvent = () => {
+    captureClientEvent(posthog, ANALYTICS_EVENTS.loginStarted, {
+      reason: "guest-upload",
+      redirectTo,
+    });
+  };
 
   return (
     <>
@@ -76,6 +94,7 @@ export const Uploader = () => {
         redirectTo={redirectTo}
         onOpenChange={setLoginDialogOpen}
         open={loginDialogOpen || Boolean(login)}
+        onClickCapture={captureLoginEvent}
       />
     </>
   );

@@ -6,6 +6,7 @@ import { Api } from "./-api";
 import { ArtifactsApiHandler } from "./-handlers/artifacts";
 import { PublicArtifactsApiHandler } from "./-handlers/public-artifacts";
 import { SystemApiHandler } from "./-handlers/system";
+import { TelemetryApiHandler } from "./-handlers/telemetry";
 import { UploadApiHandler } from "./-handlers/upload";
 import { UsageApiHandler } from "./-handlers/usage";
 import { AuthLive } from "./-middlewares/auth.server";
@@ -18,6 +19,7 @@ const ApiLive = HttpApiBuilder.layer(Api, {
   Layer.provide(UploadApiHandler),
   Layer.provide(ArtifactsApiHandler),
   Layer.provide(UsageApiHandler),
+  Layer.provide(TelemetryApiHandler),
   Layer.provide(AuthLive)
 );
 

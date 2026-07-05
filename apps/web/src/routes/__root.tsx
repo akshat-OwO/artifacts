@@ -10,6 +10,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import * as Schema from "effect/Schema";
 
 import { AnchoredToastProvider, ToastProvider } from "#/components/ui/toast";
+import { AnalyticsProvider } from "#/lib/analytics/client";
 import { getSessionQueryOptions } from "#/lib/auth/queries";
 import { DEFAULT_DESCRIPTION, SITE_NAME } from "#/lib/seo";
 import { getTheme } from "#/lib/theme";
@@ -28,26 +29,28 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => {
         <HeadContent />
       </head>
       <body className="relative">
-        <div className="relative isolate flex min-h-svh flex-col">
-          <ToastProvider>
-            <AnchoredToastProvider>{children}</AnchoredToastProvider>
-          </ToastProvider>
-        </div>
-        <TanStackDevtools
-          config={{
-            position: "bottom-right",
-          }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            {
-              name: "TanStack Query",
-              render: <ReactQueryDevtoolsPanel />,
-            },
-          ]}
-        />
+        <AnalyticsProvider>
+          <div className="relative isolate flex min-h-svh flex-col">
+            <ToastProvider>
+              <AnchoredToastProvider>{children}</AnchoredToastProvider>
+            </ToastProvider>
+          </div>
+          <TanStackDevtools
+            config={{
+              position: "bottom-right",
+            }}
+            plugins={[
+              {
+                name: "Tanstack Router",
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+              {
+                name: "TanStack Query",
+                render: <ReactQueryDevtoolsPanel />,
+              },
+            ]}
+          />
+        </AnalyticsProvider>
         <Scripts />
       </body>
     </html>

@@ -12,8 +12,21 @@ import {
 } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
 
+import type {
+  ANALYTICS_EVENTS,
+  AnalyticsProperties,
+} from "../../../../apps/web/src/lib/analytics/events";
 import { Api } from "../../../../apps/web/src/routes/api/rpc/-api";
 import { UserConfig } from "./user-config";
+
+type CliAnalyticsEventName =
+  | typeof ANALYTICS_EVENTS.cliArtifactDeleted
+  | typeof ANALYTICS_EVENTS.cliArtifactFetched
+  | typeof ANALYTICS_EVENTS.cliArtifactListed
+  | typeof ANALYTICS_EVENTS.cliArtifactShared
+  | typeof ANALYTICS_EVENTS.cliArtifactUnshared
+  | typeof ANALYTICS_EVENTS.cliArtifactUpdated
+  | typeof ANALYTICS_EVENTS.cliArtifactUploaded;
 
 export const getArtifactUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/a/${artifactId}`;
@@ -97,6 +110,28 @@ export class ApiClient extends Context.Service<ApiClient>()(
         }
       );
 
+      const captureCliEvent = Effect.fn(
+        "@artifacts/cli/helpers/captureCliEvent"
+      )(function* captureCliEventHandler(
+        event: CliAnalyticsEventName,
+        properties?: AnalyticsProperties
+      ) {
+        return yield* client.telemetry.captureCliEvent({
+          payload: {
+            event,
+            ...(properties ? { properties } : {}),
+          },
+        });
+      });
+
+      const captureCliEventSilently = (
+        event: CliAnalyticsEventName,
+        properties?: AnalyticsProperties
+      ) =>
+        captureCliEvent(event, properties).pipe(
+          Effect.catchCause(() => Effect.void)
+        );
+
       const setArtifactVisibility = Effect.fn(
         "@artifacts/cli/helpers/setArtifactVisibility"
       )(function* setArtifactVisibilityHandler(
@@ -146,6 +181,7 @@ export class ApiClient extends Context.Service<ApiClient>()(
       return {
         artifactUrl: (artifactId: string) =>
           getArtifactUrl(baseUrl, artifactId),
+        captureCliEvent: captureCliEventSilently,
         deleteArtifact,
         getArtifact,
         getArtifacts,

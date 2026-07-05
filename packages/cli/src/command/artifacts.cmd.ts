@@ -8,6 +8,7 @@ import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
 import * as Prompt from "effect/unstable/cli/Prompt";
 
+import { ANALYTICS_EVENTS } from "../../../../apps/web/src/lib/analytics/events";
 import { infoMessage, style, successMessage } from "../lib/cli-output";
 import { ApiClient } from "../services/api-client";
 
@@ -73,6 +74,9 @@ export const listArtifactsCommand = Command.make(
   Effect.fnUntraced(function* handler() {
     const apiClient = yield* ApiClient;
     const artifacts = yield* apiClient.getArtifacts();
+    yield* apiClient.captureCliEvent(ANALYTICS_EVENTS.cliArtifactListed, {
+      artifact_count: artifacts.length,
+    });
 
     if (artifacts.length === 0) {
       yield* Console.log(infoMessage("No artifacts found."));
@@ -96,6 +100,9 @@ export const getArtifactCommand = Command.make(
   Effect.fnUntraced(function* handler({ id }) {
     const apiClient = yield* ApiClient;
     const artifact = yield* apiClient.getArtifact(id);
+    yield* apiClient.captureCliEvent(ANALYTICS_EVENTS.cliArtifactFetched, {
+      artifact_id: id,
+    });
 
     yield* Console.log(style.link(apiClient.artifactUrl(artifact.id)));
   })
@@ -147,6 +154,10 @@ export const deleteArtifactCommand = Command.make(
 
     const apiClient = yield* ApiClient;
     yield* apiClient.deleteArtifact(id);
+    yield* apiClient.captureCliEvent(ANALYTICS_EVENTS.cliArtifactDeleted, {
+      artifact_id: id,
+      skipped_prompt: yes,
+    });
     yield* Console.log(successMessage("Artifact deleted."));
   })
 ).pipe(Command.withDescription("Delete an artifact"));
@@ -189,6 +200,11 @@ export const updateArtifactCommand = Command.make(
     const artifact = yield* apiClient.updateArtifact(id, {
       name: artifactName,
       path: filePath,
+    });
+    yield* apiClient.captureCliEvent(ANALYTICS_EVENTS.cliArtifactUpdated, {
+      artifact_id: id,
+      file_replaced: Boolean(filePath),
+      name_provided: Boolean(artifactName),
     });
 
     yield* Console.log(successMessage("Artifact updated."));

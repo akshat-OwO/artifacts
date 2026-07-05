@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Argument from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 
+import { ANALYTICS_EVENTS } from "../../../../apps/web/src/lib/analytics/events";
 import { style, successMessage } from "../lib/cli-output";
 import { ApiClient } from "../services/api-client";
 
@@ -14,6 +15,10 @@ export const shareCommand = Command.make(
   Effect.fnUntraced(function* handler({ id }) {
     const apiClient = yield* ApiClient;
     const artifact = yield* apiClient.setArtifactVisibility(id, true);
+
+    yield* apiClient.captureCliEvent(ANALYTICS_EVENTS.cliArtifactShared, {
+      artifact_id: id,
+    });
 
     yield* Console.log(successMessage("Artifact shared."));
     yield* Console.log(style.link(apiClient.shareUrl(artifact.id)));
@@ -28,6 +33,9 @@ export const unshareCommand = Command.make(
   Effect.fnUntraced(function* handler({ id }) {
     const apiClient = yield* ApiClient;
     yield* apiClient.setArtifactVisibility(id, false);
+    yield* apiClient.captureCliEvent(ANALYTICS_EVENTS.cliArtifactUnshared, {
+      artifact_id: id,
+    });
 
     yield* Console.log(successMessage("Artifact unshared."));
   })

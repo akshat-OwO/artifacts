@@ -1,7 +1,9 @@
 import { Sun01Icon, Moon02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { usePostHog } from "@posthog/react";
 import { useRouteContext, useRouter } from "@tanstack/react-router";
 
+import { ANALYTICS_EVENTS, captureClientEvent } from "#/lib/analytics/client";
 import { setTheme } from "#/lib/theme";
 
 import { Button } from "./ui/button";
@@ -12,12 +14,17 @@ interface ThemeToggleProps {
 }
 
 export const ThemeToggle = ({ layout = "button" }: ThemeToggleProps) => {
+  const posthog = usePostHog();
   const { theme } = useRouteContext({ from: "__root__" });
   const router = useRouter();
 
   const toggleTheme = () => {
     const themes = ["light", "dark"];
     const next = themes[(themes.indexOf(theme) + 1) % themes.length];
+    captureClientEvent(posthog, ANALYTICS_EVENTS.themeToggled, {
+      next_theme: next,
+      previous_theme: theme,
+    });
     // oxlint-disable-next-line prefer-await-to-then
     setTheme({ data: next }).then(() => router.invalidate());
   };
