@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect";
 import { PostHog } from "posthog-node";
 
+import { getAnalyticsEnvironment } from "#/lib/analytics/environment";
 import type {
   AnalyticsEventName,
   AnalyticsProperties,
@@ -26,6 +27,15 @@ export const getAnalyticsBaseUrl = () =>
 export const getAnalyticsUrl = (path: string) => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${getAnalyticsBaseUrl()}${normalizedPath}`;
+};
+
+export const getAnalyticsEnvironmentProperties = () => {
+  const origin = getAnalyticsBaseUrl();
+
+  return {
+    app_environment: getAnalyticsEnvironment(origin),
+    app_origin: origin,
+  };
 };
 
 const getPostHogClient = () => {
@@ -59,7 +69,10 @@ export const captureServerEvent = ({
     getPostHogClient()?.capture({
       distinctId,
       event,
-      ...(properties ? { properties } : {}),
+      properties: {
+        ...getAnalyticsEnvironmentProperties(),
+        ...properties,
+      },
     });
   }).pipe(
     Effect.catchCause((cause) =>

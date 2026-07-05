@@ -4,6 +4,7 @@ import type { PostHog, PostHogConfig } from "posthog-js";
 import type React from "react";
 import { useEffect, useMemo, useRef } from "react";
 
+import { getAnalyticsEnvironment } from "#/lib/analytics/environment";
 import { ANALYTICS_EVENTS } from "#/lib/analytics/events";
 import type {
   AnalyticsEventName,
@@ -19,6 +20,8 @@ const postHogApiKey = import.meta.env.VITE_POSTHOG_PROJECT_TOKEN ?? "";
 
 const getBrowserPageProperties = (userStatus: "anonymous" | "logged_in") => ({
   $current_url: window.location.href,
+  app_environment: getAnalyticsEnvironment(window.location.origin),
+  app_origin: window.location.origin,
   path: window.location.pathname,
   search: window.location.search,
   user_status: userStatus,
@@ -61,7 +64,19 @@ export const captureClientEvent = (
     return;
   }
 
-  posthog.capture(event, properties);
+  const browserProperties =
+    typeof window === "undefined"
+      ? {}
+      : {
+          $current_url: window.location.href,
+          app_environment: getAnalyticsEnvironment(window.location.origin),
+          app_origin: window.location.origin,
+        };
+
+  posthog.capture(event, {
+    ...browserProperties,
+    ...properties,
+  });
 };
 
 const PostHogIdentity = () => {
@@ -117,6 +132,8 @@ const PostHogPageviews = () => {
     if (previousPageRef.current) {
       posthog.capture(ANALYTICS_EVENTS.pageLeft, {
         $current_url: previousPageRef.current.currentUrl,
+        app_environment: getAnalyticsEnvironment(window.location.origin),
+        app_origin: window.location.origin,
         path: previousPageRef.current.path,
         search: previousPageRef.current.search,
         user_status: previousPageRef.current.userStatus,
