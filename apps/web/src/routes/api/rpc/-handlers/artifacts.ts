@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { ANALYTICS_EVENTS } from "#/lib/analytics/events";
-import { captureServerEvent } from "#/lib/analytics/server";
+import { captureServerEvent, getAnalyticsUrl } from "#/lib/analytics/server";
 import { AuthUser } from "#/lib/auth/context";
 import { PgClientLive } from "#/lib/db";
 import { artifact, DEFAULT_ARTIFACT_PREVIEW_KEY } from "#/lib/db/schemas";
@@ -325,9 +325,11 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
             distinctId: user.id,
             event: ANALYTICS_EVENTS.artifactUpdated,
             properties: {
+              $current_url: getAnalyticsUrl(`/a/${artifactId}`),
               artifact_id: artifactId,
               file_replaced: Boolean(file),
               name_changed: Boolean(name),
+              path: `/a/${artifactId}`,
               source: "api",
             },
           });
@@ -368,7 +370,11 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
                 ? ANALYTICS_EVENTS.artifactShared
                 : ANALYTICS_EVENTS.artifactUnshared,
               properties: {
+                $current_url: getAnalyticsUrl(
+                  isPublic ? `/s/${artifactId}` : `/a/${artifactId}`
+                ),
                 artifact_id: artifactId,
+                path: isPublic ? `/s/${artifactId}` : `/a/${artifactId}`,
                 source: "api",
               },
             });
@@ -414,7 +420,9 @@ export const ArtifactsApiHandler = HttpApiBuilder.group(
             distinctId: user.id,
             event: ANALYTICS_EVENTS.artifactDeleted,
             properties: {
+              $current_url: getAnalyticsUrl(`/a/${artifactId}`),
               artifact_id: artifactId,
+              path: `/a/${artifactId}`,
               source: "api",
             },
           });

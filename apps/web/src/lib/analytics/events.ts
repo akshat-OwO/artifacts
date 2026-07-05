@@ -14,6 +14,7 @@ export const ANALYTICS_EVENTS = {
   cliArtifactUploaded: "cli artifact uploaded",
   loginDialogShown: "login dialog shown",
   loginStarted: "login started",
+  pageLeft: "$pageleave",
   pageViewed: "$pageview",
   themeToggled: "theme toggled",
   uploadDropped: "upload dropped",

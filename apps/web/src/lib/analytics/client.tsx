@@ -17,6 +17,13 @@ const DEFAULT_POSTHOG_HOST = "https://us.i.posthog.com";
 
 const postHogApiKey = import.meta.env.VITE_POSTHOG_PROJECT_TOKEN ?? "";
 
+const getBrowserPageProperties = (userStatus: "anonymous" | "logged_in") => ({
+  $current_url: window.location.href,
+  path: window.location.pathname,
+  search: window.location.search,
+  user_status: userStatus,
+});
+
 const getTracingHost = () => {
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -95,19 +102,57 @@ const PostHogPageviews = () => {
   const { session } = useRouteContext({ from: "__root__" });
   const location = useRouterState({ select: (state) => state.location });
   const userStatus = session?.user ? "logged_in" : "anonymous";
+  const previousPageRef = useRef<{
+    currentUrl: string;
+    path: string;
+    search: string;
+    userStatus: "anonymous" | "logged_in";
+  } | null>(null);
 
   useEffect(() => {
     if (!isPostHogConfigured() || typeof window === "undefined") {
       return;
     }
 
-    posthog.capture(ANALYTICS_EVENTS.pageViewed, {
-      $current_url: window.location.href,
+    if (previousPageRef.current) {
+      posthog.capture(ANALYTICS_EVENTS.pageLeft, {
+        $current_url: previousPageRef.current.currentUrl,
+        path: previousPageRef.current.path,
+        search: previousPageRef.current.search,
+        user_status: previousPageRef.current.userStatus,
+      });
+    }
+
+    posthog.capture(
+      ANALYTICS_EVENTS.pageViewed,
+      getBrowserPageProperties(userStatus)
+    );
+    previousPageRef.current = {
+      currentUrl: window.location.href,
       path: location.pathname,
       search: location.searchStr,
-      user_status: userStatus,
-    });
+      userStatus,
+    };
   }, [location.pathname, location.searchStr, posthog, userStatus]);
+
+  useEffect(() => {
+    if (!isPostHogConfigured() || typeof window === "undefined") {
+      return;
+    }
+
+    const capturePageLeave = () => {
+      posthog.capture(
+        ANALYTICS_EVENTS.pageLeft,
+        getBrowserPageProperties(userStatus)
+      );
+    };
+
+    window.addEventListener("pagehide", capturePageLeave);
+
+    return () => {
+      window.removeEventListener("pagehide", capturePageLeave);
+    };
+  }, [posthog, userStatus]);
 
   return null;
 };

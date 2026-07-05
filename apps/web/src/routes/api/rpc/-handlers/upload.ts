@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
 import { ANALYTICS_EVENTS } from "#/lib/analytics/events";
-import { captureServerEvent } from "#/lib/analytics/server";
+import { captureServerEvent, getAnalyticsUrl } from "#/lib/analytics/server";
 import { AuthUser } from "#/lib/auth/context";
 import { PgClientLive } from "#/lib/db";
 import { artifact } from "#/lib/db/schemas";
@@ -154,8 +154,10 @@ export const UploadApiHandler = HttpApiBuilder.group(
           distinctId: user.id,
           event: ANALYTICS_EVENTS.artifactUploaded,
           properties: {
+            $current_url: getAnalyticsUrl(`/a/${artifactId}`),
             artifact_id: artifactId,
             artifact_size_bytes: file.size,
+            path: `/a/${artifactId}`,
             source: "api",
           },
         });
