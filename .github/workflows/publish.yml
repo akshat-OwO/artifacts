@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - ".github/workflows/publish.yml"
       - "packages/cli/package.json"
   workflow_dispatch:
 
@@ -13,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -23,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -49,6 +52,9 @@ jobs:
           package_name="$(node --print "require('./package.json').name")"
           package_version="$(node --print "require('./package.json').version")"
 
+          echo "package_name=${package_name}" >> "$GITHUB_OUTPUT"
+          echo "package_version=${package_version}" >> "$GITHUB_OUTPUT"
+
           if npm view "${package_name}@${package_version}" version >/dev/null 2>&1; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
             echo "${package_name}@${package_version} is already published"
@@ -60,3 +66,19 @@ jobs:
         if: steps.version.outputs.publish == 'true'
         working-directory: packages/cli
         run: npm stage publish --access public
+
+      - name: Create release tag
+        env:
+          PACKAGE_NAME: ${{ steps.version.outputs.package_name }}
+          PACKAGE_VERSION: ${{ steps.version.outputs.package_version }}
+        run: |
+          tag="${PACKAGE_NAME}@${PACKAGE_VERSION}"
+          release_commit="$(git log -1 --format=%H -- packages/cli/package.json)"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "${tag} already exists"
+            exit 0
+          fi
+
+          git tag "${tag}" "${release_commit}"
+          git push origin "${tag}"
