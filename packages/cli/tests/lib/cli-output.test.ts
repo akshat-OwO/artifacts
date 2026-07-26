@@ -51,6 +51,17 @@ describe("formatCliError", () => {
       "The requested resource was not found. Check the artifact id and try again."
     );
   });
+
+  test("includes the failed download output path", () => {
+    expect(
+      formatCliError({
+        _tag: "ArtifactOutputWriteError",
+        path: "./missing/artifact.html",
+      })
+    ).toBe(
+      "Could not write the artifact HTML to `./missing/artifact.html`. Check the path and permissions, then try again."
+    );
+  });
 });
 
 describe("status messages", () => {

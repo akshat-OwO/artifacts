@@ -9,6 +9,7 @@ import {
   FetchHttpClient,
   HttpClient,
   HttpClientRequest,
+  HttpClientResponse,
 } from "effect/unstable/http";
 import { HttpApiClient } from "effect/unstable/httpapi";
 
@@ -21,6 +22,7 @@ import { UserConfig } from "./user-config";
 
 type CliAnalyticsEventName =
   | typeof ANALYTICS_EVENTS.cliArtifactDeleted
+  | typeof ANALYTICS_EVENTS.cliArtifactDownloaded
   | typeof ANALYTICS_EVENTS.cliArtifactFetched
   | typeof ANALYTICS_EVENTS.cliArtifactListed
   | typeof ANALYTICS_EVENTS.cliArtifactShared
@@ -54,6 +56,16 @@ const getUploadPayload = ({
 export const getShareUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/s/${artifactId}`;
 
+export const fetchArtifactHtml = (
+  url: string,
+  httpClient: Pick<HttpClient.HttpClient, "get">
+) =>
+  Effect.gen(function* fetchArtifactHtmlEffect() {
+    const response = yield* httpClient.get(url);
+    yield* HttpClientResponse.filterStatusOk(response);
+    return yield* response.text;
+  });
+
 interface UpdateArtifactInput {
   readonly name?: string;
   readonly path?: string;
@@ -81,6 +93,7 @@ export class ApiClient extends Context.Service<ApiClient>()(
           HttpClientRequest.setHeader("Authorization", `Bearer ${accessToken}`)
         ),
       });
+      const httpClient = yield* HttpClient.HttpClient;
 
       const healthCheck = Effect.fn("@artifacts/cli/helpers/apiHealthCheck")(
         function* healthCheckHandler() {
@@ -109,6 +122,17 @@ export class ApiClient extends Context.Service<ApiClient>()(
           });
         }
       );
+
+      const downloadArtifact = Effect.fn(
+        "@artifacts/cli/helpers/downloadArtifact"
+      )(function* downloadArtifactHandler(artifactId: string) {
+        const artifact = yield* getArtifact(artifactId);
+        const artifactUrl = yield* client.artifacts.getArtifactPreviewByKey({
+          params: { artifactKey: artifact.artifactKey },
+        });
+
+        return yield* fetchArtifactHtml(artifactUrl, httpClient);
+      });
 
       const captureCliEvent = Effect.fn(
         "@artifacts/cli/helpers/captureCliEvent"
@@ -183,6 +207,7 @@ export class ApiClient extends Context.Service<ApiClient>()(
           getArtifactUrl(baseUrl, artifactId),
         captureCliEvent: captureCliEventSilently,
         deleteArtifact,
+        downloadArtifact,
         getArtifact,
         getArtifacts,
         healthCheck,

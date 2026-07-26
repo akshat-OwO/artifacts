@@ -13,6 +13,9 @@ interface HttpResponseLike {
 }
 
 interface HttpClientErrorLike extends TaggedError {
+  readonly reason?: {
+    readonly response?: HttpResponseLike;
+  };
   readonly response?: HttpResponseLike;
 }
 
@@ -41,7 +44,7 @@ const isHttpClientError = (error: unknown): error is HttpClientErrorLike =>
   getTag(error) === "HttpClientError";
 
 const formatHttpClientError = (error: HttpClientErrorLike): string => {
-  const status = error.response?.status;
+  const status = error.response?.status ?? error.reason?.response?.status;
 
   if (status === 401) {
     return "You are not logged in. Run `artifacts auth login` and try again.";
@@ -64,17 +67,37 @@ const formatHttpClientError = (error: HttpClientErrorLike): string => {
 const isConnectionMessage = (message: string): boolean =>
   message.includes("Unable to connect") || message.includes("fetch failed");
 
-export const formatCliError = (error: unknown): string => {
-  const tag = getTag(error);
-  const message = getMessage(error);
-
+const formatLocalCliError = (
+  error: unknown,
+  tag: string | undefined
+): string | undefined => {
   switch (tag) {
     case "ArtifactNotFoundError": {
       return "Artifact not found. Check the id and try again.";
     }
+    case "ArtifactOutputWriteError": {
+      const { path } = error as { readonly path?: string };
+      return `Could not write the artifact HTML${path ? ` to \`${path}\`` : ""}. Check the path and permissions, then try again.`;
+    }
     case "AuthConfigParseError": {
       return "Your saved auth config could not be read. Run `artifacts auth login` to refresh it.";
     }
+    default: {
+      break;
+    }
+  }
+};
+
+export const formatCliError = (error: unknown): string => {
+  const tag = getTag(error);
+  const message = getMessage(error);
+  const localErrorMessage = formatLocalCliError(error, tag);
+
+  if (localErrorMessage) {
+    return localErrorMessage;
+  }
+
+  switch (tag) {
     case "AuthDeviceCodeError": {
       const { description } = error as TaggedError;
       return `Could not start device login${description ? `: ${description}` : "."}`;

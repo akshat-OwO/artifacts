@@ -8,6 +8,7 @@ import {
   updateArtifactCommand,
 } from "./artifacts.cmd";
 import { authCommand } from "./auth.cmd";
+import { downloadArtifactCommand } from "./download.cmd";
 import { shareCommand, unshareCommand } from "./share.cmd";
 import { uploadCommand } from "./upload.cmd";
 
@@ -17,6 +18,7 @@ export const cli = Command.make("artifacts").pipe(
     agentCommand,
     authCommand,
     deleteArtifactCommand,
+    downloadArtifactCommand,
     getArtifactCommand,
     listArtifactsCommand,
     shareCommand,
