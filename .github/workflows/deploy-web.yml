@@ -75,4 +75,4 @@ jobs:
             --header "accept: application/json" \
             --header "Content-Type: application/json" \
             --header "x-api-key: ${DOKPLOY_API_TOKEN}" \
-            --data "{\"applicationId\":\"${DOKPLOY_APPLICATION_ID}\"}"
+            --data "{\"applicationId\":\"${DOKPLOY_WEB_ID}\"}"
