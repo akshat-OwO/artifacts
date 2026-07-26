@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import * as Schema from "effect/Schema";
 import { Suspense } from "react";
 
 import { ArtifactPreviewError } from "#/components/artifacts/artifact-preview-error";
@@ -7,6 +8,7 @@ import { PublicArtifactPreview } from "#/components/artifacts/public-artifact-pr
 import { Navbar } from "#/components/navbar";
 import { ScrollArea } from "#/components/ui/scroll-area";
 import { getPublicArtifactByIdOptions } from "#/lib/queries/artifacts/get-public-by-id";
+import { optionalBooleanSearchParam } from "#/lib/schemas/search";
 import { artifactPageHead } from "#/lib/seo";
 
 interface PublicArtifactRouteHeadData {
@@ -17,8 +19,23 @@ interface PublicArtifactRouteHeadData {
   };
 }
 
+const sharedArtifactSearchSchema = Schema.Struct({
+  onlyContent: optionalBooleanSearchParam,
+}).pipe(Schema.toStandardSchemaV1);
+
 const RouteComponent = () => {
   const { artifactId } = Route.useParams();
+  const { onlyContent = true } = Route.useSearch();
+
+  if (onlyContent) {
+    return (
+      <div className="h-dvh w-full overflow-hidden">
+        <Suspense fallback={<ArtifactPreviewLoader />}>
+          <PublicArtifactPreview artifactId={artifactId} />
+        </Suspense>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -59,4 +76,5 @@ export const Route = createFileRoute("/s/$artifactId")({
 
     return { artifact };
   },
+  validateSearch: sharedArtifactSearchSchema,
 });

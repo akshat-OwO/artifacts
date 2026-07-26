@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import * as Schema from "effect/Schema";
 import { Suspense } from "react";
 
 import { ArtifactPreview } from "#/components/artifacts/artifact-preview";
 import { ArtifactPreviewError } from "#/components/artifacts/artifact-preview-error";
 import { ArtifactPreviewLoader } from "#/components/artifacts/artifact-preview-loader";
 import { getArtifactByIdOptions } from "#/lib/queries/artifacts/get-by-id";
+import { optionalBooleanSearchParam } from "#/lib/schemas/search";
 import { artifactPageHead } from "#/lib/seo";
 
 interface ArtifactRouteHeadData {
@@ -13,11 +15,20 @@ interface ArtifactRouteHeadData {
   };
 }
 
+const artifactSearchSchema = Schema.Struct({
+  onlyContent: optionalBooleanSearchParam,
+}).pipe(Schema.toStandardSchemaV1);
+
 const RouteComponent = () => {
   const { artifactId } = Route.useParams();
+  const { onlyContent = false } = Route.useSearch();
 
   return (
-    <div className="h-full overflow-hidden">
+    <div
+      className={
+        onlyContent ? "h-dvh w-full overflow-hidden" : "h-full overflow-hidden"
+      }
+    >
       <Suspense fallback={<ArtifactPreviewLoader />}>
         <ArtifactPreview artifactId={artifactId} />
       </Suspense>
@@ -39,4 +50,5 @@ export const Route = createFileRoute("/_protected/a/$artifactId")({
 
     return { artifact };
   },
+  validateSearch: artifactSearchSchema,
 });

@@ -1,18 +1,35 @@
-import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  redirect,
+  useMatch,
+  Outlet,
+} from "@tanstack/react-router";
 
 import { Navbar } from "#/components/navbar";
 import { ScrollArea } from "#/components/ui/scroll-area";
 
-const RouteComponent = () => (
-  <div className="flex h-dvh flex-col overflow-hidden">
-    <Navbar />
-    <div className="border-primary bg-background mx-2 my-4 min-h-0 flex-1 overflow-hidden rounded-md border md:mx-6">
-      <ScrollArea fill>
-        <Outlet />
-      </ScrollArea>
+const RouteComponent = () => {
+  const onlyContent = useMatch({
+    from: "/_protected/a/$artifactId",
+    select: (match) => match.search.onlyContent,
+    shouldThrow: false,
+  });
+
+  if (onlyContent) {
+    return <Outlet />;
+  }
+
+  return (
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <Navbar />
+      <div className="border-primary bg-background mx-2 my-4 min-h-0 flex-1 overflow-hidden rounded-md border md:mx-6">
+        <ScrollArea fill>
+          <Outlet />
+        </ScrollArea>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const Route = createFileRoute("/_protected")({
   beforeLoad: ({ context: { session }, location }) => {

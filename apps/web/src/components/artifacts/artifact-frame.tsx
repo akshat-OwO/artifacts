@@ -46,7 +46,7 @@ export const ArtifactFrame = ({
   return (
     <iframe
       allow=""
-      className="h-full w-full rounded-md"
+      className="h-full w-full"
       ref={iframeRef}
       referrerPolicy="no-referrer"
       sandbox="allow-scripts"
