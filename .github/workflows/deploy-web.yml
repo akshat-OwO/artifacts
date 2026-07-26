@@ -9,6 +9,7 @@ on:
       - "apps/web/**"
       - "package.json"
       - "bun.lock"
+      - "railpack.web.drop.json"
       - "railpack.web.json"
       - "turbo.json"
   workflow_dispatch:
@@ -47,7 +48,21 @@ jobs:
       - name: Build
         run: bun --cwd apps/web build
 
-      - name: Deploy to Dokploy
+      - name: Package prebuilt deployment
+        run: |
+          deployment_directory="${RUNNER_TEMP}/artifacts-web-drop"
+          archive_path="${RUNNER_TEMP}/artifacts-web-drop.zip"
+
+          mkdir -p "$deployment_directory"
+          git archive --format=tar HEAD | tar -xf - -C "$deployment_directory"
+          cp -R apps/web/.output "$deployment_directory/apps/web/.output"
+          cp railpack.web.drop.json "$deployment_directory/railpack.json"
+
+          cd "$deployment_directory"
+          zip -q -r "$archive_path" .
+          echo "WEB_DROP_ARCHIVE=$archive_path" >> "$GITHUB_ENV"
+
+      - name: Upload prebuilt deployment to Dokploy
         env:
           DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
           DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_WEB_ID || vars.DOKPLOY_WEB_ID }}
@@ -69,10 +84,10 @@ jobs:
           fi
 
           curl --fail-with-body \
-            --retry 3 \
             --request POST \
-            "${DOKPLOY_URL%/}/api/application.deploy" \
+            "${DOKPLOY_URL%/}/api/application.dropDeployment" \
             --header "accept: application/json" \
-            --header "Content-Type: application/json" \
             --header "x-api-key: ${DOKPLOY_API_TOKEN}" \
-            --data "{\"applicationId\":\"${DOKPLOY_WEB_ID}\"}"
+            --form "applicationId=${DOKPLOY_APPLICATION_ID}" \
+            --form "dropBuildPath=." \
+            --form "zip=@${WEB_DROP_ARCHIVE};type=application/zip"

@@ -9,6 +9,7 @@ on:
       - "packages/scout/**"
       - "package.json"
       - "bun.lock"
+      - "railpack.scout.drop.json"
       - "railpack.scout.json"
       - "turbo.json"
   workflow_dispatch:
@@ -45,9 +46,36 @@ jobs:
         run: bun --cwd packages/scout check-types
 
       - name: Build
-        run: bun build packages/scout/src/index.ts --target=bun --packages=external --outdir=/tmp/scout-build
+        run: |
+          mkdir -p packages/scout/dist
+          bun build packages/scout/src/index.ts \
+            --target=bun \
+            --production \
+            --external=playwright \
+            --external=playwright-core \
+            --outfile=packages/scout/dist/index.js
 
-      - name: Deploy to Dokploy
+      - name: Install Playwright browser
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/packages/scout/.playwright
+        run: bun --cwd packages/scout x playwright install --only-shell chromium
+
+      - name: Package prebuilt deployment
+        run: |
+          deployment_directory="${RUNNER_TEMP}/artifacts-scout-drop"
+          archive_path="${RUNNER_TEMP}/artifacts-scout-drop.zip"
+
+          mkdir -p "$deployment_directory"
+          git archive --format=tar HEAD | tar -xf - -C "$deployment_directory"
+          cp -R packages/scout/dist "$deployment_directory/packages/scout/dist"
+          cp -R packages/scout/.playwright "$deployment_directory/packages/scout/.playwright"
+          cp railpack.scout.drop.json "$deployment_directory/railpack.json"
+
+          cd "$deployment_directory"
+          zip -q -r "$archive_path" .
+          echo "SCOUT_DROP_ARCHIVE=$archive_path" >> "$GITHUB_ENV"
+
+      - name: Upload prebuilt deployment to Dokploy
         env:
           DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
           DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_SCOUT_ID || vars.DOKPLOY_SCOUT_ID }}
@@ -69,10 +97,10 @@ jobs:
           fi
 
           curl --fail-with-body \
-            --retry 3 \
             --request POST \
-            "${DOKPLOY_URL%/}/api/application.deploy" \
+            "${DOKPLOY_URL%/}/api/application.dropDeployment" \
             --header "accept: application/json" \
-            --header "Content-Type: application/json" \
             --header "x-api-key: ${DOKPLOY_API_TOKEN}" \
-            --data "{\"applicationId\":\"${DOKPLOY_APPLICATION_ID}\"}"
+            --form "applicationId=${DOKPLOY_APPLICATION_ID}" \
+            --form "dropBuildPath=." \
+            --form "zip=@${SCOUT_DROP_ARCHIVE};type=application/zip"
