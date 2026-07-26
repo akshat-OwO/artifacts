@@ -8,6 +8,7 @@ import {
   fetchArtifactHtml,
   getArtifactUrl,
   getShareUrl,
+  withArtifactDownloadError,
 } from "../../src/services/api-client";
 
 describe("getArtifactUrl", () => {
@@ -64,11 +65,12 @@ describe("fetchArtifactHtml", () => {
     expect(result).toBe(html);
   });
 
-  test("fails with an actionable error when artifact storage returns 404", async () => {
-    const url = "https://storage.example/missing-artifact";
+  test("fails with an actionable error without exposing a rejected storage URL", async () => {
+    const url =
+      "https://storage.example/artifact?X-Amz-Credential=sensitive-value";
     const response = HttpClientResponse.fromWeb(
       HttpClientRequest.get(url),
-      new Response("missing", { status: 404 })
+      new Response("forbidden", { status: 403 })
     );
 
     const error = await Effect.runPromise(
@@ -79,8 +81,27 @@ describe("fetchArtifactHtml", () => {
       )
     );
 
-    expect(formatCliError(error)).toBe(
-      "The requested resource was not found. Check the artifact id and try again."
+    const message = formatCliError(error);
+
+    expect(message).toBe(
+      "Could not download the artifact HTML. Please try again; if the problem continues, check the server's artifact storage configuration."
     );
+    expect(message).not.toContain(url);
+    expect(error).toMatchObject({ _tag: "ArtifactDownloadError" });
+  });
+});
+
+describe("withArtifactDownloadError", () => {
+  test("maps signed URL retrieval failures to the download error", async () => {
+    const previewError = { _tag: "PreviewError" } as const;
+
+    const error = await Effect.runPromise(
+      Effect.flip(withArtifactDownloadError(Effect.fail(previewError)))
+    );
+
+    expect(error).toMatchObject({
+      _tag: "ArtifactDownloadError",
+      cause: previewError,
+    });
   });
 });

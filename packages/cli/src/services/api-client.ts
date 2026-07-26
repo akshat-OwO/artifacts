@@ -18,6 +18,7 @@ import type {
   AnalyticsProperties,
 } from "../../../../apps/web/src/lib/analytics/events";
 import { Api } from "../../../../apps/web/src/routes/api/rpc/-api";
+import { ArtifactDownloadError } from "../errors/artifact-download.error";
 import { UserConfig } from "./user-config";
 
 type CliAnalyticsEventName =
@@ -56,6 +57,11 @@ const getUploadPayload = ({
 export const getShareUrl = (baseUrl: string, artifactId: string): string =>
   `${baseUrl.replace(/\/+$/u, "")}/s/${artifactId}`;
 
+export const withArtifactDownloadError = <A, E, R>(
+  effect: Effect.Effect<A, E, R>
+): Effect.Effect<A, ArtifactDownloadError, R> =>
+  effect.pipe(Effect.mapError((cause) => new ArtifactDownloadError({ cause })));
+
 export const fetchArtifactHtml = (
   url: string,
   httpClient: Pick<HttpClient.HttpClient, "get">
@@ -64,7 +70,7 @@ export const fetchArtifactHtml = (
     const response = yield* httpClient.get(url);
     yield* HttpClientResponse.filterStatusOk(response);
     return yield* response.text;
-  });
+  }).pipe(withArtifactDownloadError);
 
 interface UpdateArtifactInput {
   readonly name?: string;
@@ -127,9 +133,11 @@ export class ApiClient extends Context.Service<ApiClient>()(
         "@artifacts/cli/helpers/downloadArtifact"
       )(function* downloadArtifactHandler(artifactId: string) {
         const artifact = yield* getArtifact(artifactId);
-        const artifactUrl = yield* client.artifacts.getArtifactPreviewByKey({
-          params: { artifactKey: artifact.artifactKey },
-        });
+        const artifactUrl = yield* client.artifacts
+          .getArtifactPreviewByKey({
+            params: { artifactKey: artifact.artifactKey },
+          })
+          .pipe(withArtifactDownloadError);
 
         return yield* fetchArtifactHtml(artifactUrl, httpClient);
       });

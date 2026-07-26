@@ -72,6 +72,9 @@ const formatLocalCliError = (
   tag: string | undefined
 ): string | undefined => {
   switch (tag) {
+    case "ArtifactDownloadError": {
+      return "Could not download the artifact HTML. Please try again; if the problem continues, check the server's artifact storage configuration.";
+    }
     case "ArtifactNotFoundError": {
       return "Artifact not found. Check the id and try again.";
     }
