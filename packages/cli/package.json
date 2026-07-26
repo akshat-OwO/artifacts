@@ -3,6 +3,11 @@
   "version": "0.0.7",
   "private": false,
   "description": "CLI for publishing and managing Artifacts.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akshat-OwO/artifacts.git",
+    "directory": "packages/cli"
+  },
   "bin": {
     "artifacts": "dist/index.js"
   },

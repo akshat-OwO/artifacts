@@ -8,13 +8,16 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
+    "changeset": "changeset",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "check": "ultracite check",
-    "fix": "ultracite fix"
+    "fix": "ultracite fix",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
     "oxfmt": "^0.54.0",
     "oxlint": "^1.69.0",
     "turbo": "^2.9.18",
