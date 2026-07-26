@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - ".github/workflows/deploy-scout.yml"
       - "packages/scout/**"
       - "package.json"
       - "bun.lock"
@@ -44,9 +45,24 @@ jobs:
       - name: Deploy to Dokploy
         env:
           DOKPLOY_API_TOKEN: ${{ secrets.DOKPLOY_API_TOKEN }}
-          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_SCOUT_ID }}
-          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_SCOUT_ID || vars.DOKPLOY_SCOUT_ID }}
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL || vars.DOKPLOY_URL }}
         run: |
+          if [[ -z "$DOKPLOY_URL" ]]; then
+            echo "::error::DOKPLOY_URL is not configured as a repository secret or variable."
+            exit 1
+          fi
+
+          if [[ -z "$DOKPLOY_API_TOKEN" ]]; then
+            echo "::error::DOKPLOY_API_TOKEN is not configured as a repository secret."
+            exit 1
+          fi
+
+          if [[ -z "$DOKPLOY_APPLICATION_ID" ]]; then
+            echo "::error::DOKPLOY_SCOUT_ID is not configured as a repository secret or variable."
+            exit 1
+          fi
+
           curl --fail-with-body \
             --retry 3 \
             --request POST \
