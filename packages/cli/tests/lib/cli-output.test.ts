@@ -51,6 +51,28 @@ describe("formatCliError", () => {
       "The requested resource was not found. Check the artifact id and try again."
     );
   });
+
+  test("includes the failed download output path", () => {
+    expect(
+      formatCliError({
+        _tag: "ArtifactOutputWriteError",
+        path: "./missing/artifact.html",
+      })
+    ).toBe(
+      "Could not write the artifact HTML to `./missing/artifact.html`. Check the path and permissions, then try again."
+    );
+  });
+
+  test("explains artifact content download failures", () => {
+    expect(
+      formatCliError({
+        _tag: "ArtifactDownloadError",
+        cause: { _tag: "PreviewError" },
+      })
+    ).toBe(
+      "Could not download the artifact HTML. Please try again; if the problem continues, check the server's artifact storage configuration."
+    );
+  });
 });
 
 describe("status messages", () => {

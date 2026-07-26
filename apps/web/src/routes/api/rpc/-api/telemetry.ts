@@ -7,6 +7,7 @@ import { AuthMiddleware } from "../-middlewares/auth";
 
 const CliTelemetryEvent = Schema.Literals([
   ANALYTICS_EVENTS.cliArtifactDeleted,
+  ANALYTICS_EVENTS.cliArtifactDownloaded,
   ANALYTICS_EVENTS.cliArtifactFetched,
   ANALYTICS_EVENTS.cliArtifactListed,
   ANALYTICS_EVENTS.cliArtifactShared,

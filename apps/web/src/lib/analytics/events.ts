@@ -6,6 +6,7 @@ export const ANALYTICS_EVENTS = {
   artifactUpdated: "artifact updated",
   artifactUploaded: "artifact uploaded",
   cliArtifactDeleted: "cli artifact deleted",
+  cliArtifactDownloaded: "cli artifact downloaded",
   cliArtifactFetched: "cli artifact fetched",
   cliArtifactListed: "cli artifact listed",
   cliArtifactShared: "cli artifact shared",

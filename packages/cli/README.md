@@ -93,6 +93,27 @@ Example:
 artifacts get 0192f2c2-8f0e-7000-9c41-68aaf2f4fd21
 ```
 
+## Download An Artifact
+
+Write an artifact's raw HTML to standard output:
+
+```sh
+artifacts download <artifact-id>
+```
+
+The output can be piped or redirected:
+
+```sh
+artifacts download <artifact-id> | sed -n '1,20p'
+```
+
+Write the HTML directly to a file with `-o` or `--output`:
+
+```sh
+artifacts download <artifact-id> -o ./artifact.html
+artifacts download <artifact-id> --output ./artifact.html
+```
+
 ## Share An Artifact
 
 Make an artifact public and print its share link:
