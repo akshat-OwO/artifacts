@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import * as PgDrizzle from "drizzle-orm/effect-postgres";
+import * as D1Drizzle from "drizzle-orm/effect-d1";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
@@ -7,7 +7,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi";
 import { ANALYTICS_EVENTS } from "#/lib/analytics/events";
 import { captureServerEvent, getAnalyticsUrl } from "#/lib/analytics/server";
 import { AuthUser } from "#/lib/auth/context";
-import { PgClientLive } from "#/lib/db";
+import { D1ClientLive } from "#/lib/db";
 import { artifact } from "#/lib/db/schemas";
 import {
   FileTooLargeError,
@@ -17,7 +17,6 @@ import {
 import { FileUploadError } from "#/lib/errors/upload/file-upload-error";
 import { InvalidFileTypeError } from "#/lib/errors/upload/invalid-file";
 import { UsageLimitExceededError } from "#/lib/errors/upload/usage-limit";
-import { ScoutApiLive, ScoutApiService } from "#/lib/scout";
 import { Storage, StorageLive } from "#/lib/storage";
 
 import { Api } from "../-api";
@@ -30,9 +29,7 @@ const isHtmlFile = (file: File): boolean =>
   file.name.endsWith(".htm");
 
 const getUserArtifactUsageBytes = () =>
-  sql<number>`coalesce(sum(${artifact.artifactSizeBytes}), 0)::integer`.mapWith(
-    Number
-  );
+  sql<number>`coalesce(sum(${artifact.artifactSizeBytes}), 0)`.mapWith(Number);
 
 const getRequestFormData = (request: Request) =>
   Effect.tryPromise({
@@ -74,82 +71,39 @@ export const UploadApiHandler = HttpApiBuilder.group(
 
         const artifactId = crypto.randomUUID();
         const artifactKey = `artifacts/${user.id}/${artifactId}`;
-        const db = yield* PgDrizzle.makeWithDefaults();
+        const db = yield* D1Drizzle.makeWithDefaults({});
 
-        const uploadedFile = yield* db.transaction((tx) =>
-          Effect.gen(function* transaction() {
-            yield* tx.execute(
-              sql`select pg_advisory_xact_lock(hashtext(${user.id}))`
-            );
+        const [usage] = yield* db
+          .select({ artifactSizeBytes: getUserArtifactUsageBytes() })
+          .from(artifact)
+          .where(eq(artifact.userId, user.id));
+        const currentBytes = usage?.artifactSizeBytes ?? 0;
 
-            const [usage] = yield* tx
-              .select({
-                artifactSizeBytes: getUserArtifactUsageBytes(),
-              })
-              .from(artifact)
-              .where(eq(artifact.userId, user.id));
-            const currentBytes = usage?.artifactSizeBytes ?? 0;
+        if (currentBytes + file.size > USER_UPLOAD_GRACE_LIMIT_BYTES) {
+          return yield* new UsageLimitExceededError({
+            currentBytes,
+            incomingBytes: file.size,
+            maximumBytes: USER_UPLOAD_GRACE_LIMIT_BYTES,
+          });
+        }
 
-            if (currentBytes + file.size > USER_UPLOAD_GRACE_LIMIT_BYTES) {
-              return yield* new UsageLimitExceededError({
-                currentBytes,
-                incomingBytes: file.size,
-                maximumBytes: USER_UPLOAD_GRACE_LIMIT_BYTES,
-              });
-            }
+        const uploadedArtifact = yield* Effect.tryPromise({
+          catch: () => new FileUploadError(),
+          try: () =>
+            storage.r2.upload(artifactKey, file, {
+              contentType: "text/html",
+              metadata: { userId: user.id },
+            }),
+        });
 
-            const uploadedArtifact = yield* Effect.tryPromise({
-              catch: () => new FileUploadError(),
-              try: () =>
-                storage.r2.upload(artifactKey, file, {
-                  contentType: "text/html",
-                  metadata: { userId: user.id },
-                }),
-            });
+        yield* db.insert(artifact).values({
+          artifactKey: uploadedArtifact.key,
+          artifactSizeBytes: file.size,
+          id: artifactId,
+          ...(name ? { name } : {}),
+          userId: user.id,
+        });
 
-            yield* tx.insert(artifact).values({
-              artifactKey: uploadedArtifact.key,
-              artifactSizeBytes: file.size,
-              id: artifactId,
-              ...(name ? { name } : {}),
-              userId: user.id,
-            });
-
-            return uploadedArtifact;
-          })
-        );
-
-        const capturePreview = Effect.gen(function* capturePreview() {
-          const backgroundDb = yield* PgDrizzle.makeWithDefaults();
-          const scoutApi = yield* ScoutApiService;
-          const backgroundStorage = yield* Storage;
-          const previewUrl = yield* Effect.promise(() =>
-            backgroundStorage.r2.url(uploadedFile.key)
-          );
-          const preview = yield* scoutApi.getCapture(previewUrl);
-          const previewKey = `artifacts/${user.id}/${artifactId}/preview`;
-
-          yield* Effect.promise(() =>
-            backgroundStorage.r2.upload(previewKey, preview, {
-              contentType: "image/webp",
-              metadata: { artifactId, userId: user.id },
-            })
-          );
-
-          yield* backgroundDb
-            .update(artifact)
-            .set({ previewKey })
-            .where(eq(artifact.id, artifactId));
-        }).pipe(
-          Effect.provide(
-            Layer.mergeAll(ScoutApiLive, StorageLive, PgClientLive)
-          ),
-          Effect.catchCause((cause) =>
-            Effect.logError("Failed to generate artifact preview", cause)
-          )
-        );
-
-        yield* Effect.forkDetach(capturePreview);
         yield* captureServerEvent({
           distinctId: user.id,
           event: ANALYTICS_EVENTS.artifactUploaded,
@@ -166,6 +120,6 @@ export const UploadApiHandler = HttpApiBuilder.group(
           data: { id: artifactId },
           message: "Successully uploaded artifact",
         };
-      }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
+      }).pipe(Effect.provide(Layer.mergeAll(StorageLive, D1ClientLive)))
     )
 );

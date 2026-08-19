@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "artifacts-web",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "d1_databases": [
+    {
+      "binding": "artifacts_db",
+      "database_name": "artifacts-db",
+      "database_id": "c9fb179b-cf90-43e1-91af-e2ee4944def7",
+      "migrations_dir": "src/lib/db/migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "bucket_name": "artifacts-bucket",
+      "binding": "artifacts_bucket",
+      "remote": true,
+    },
+  ],
+}

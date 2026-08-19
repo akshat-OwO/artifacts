@@ -1,1 +1,0 @@
-ALTER TABLE "artifact" ADD COLUMN "preview_key" text DEFAULT 'preview/preview-fallback.png' NOT NULL;

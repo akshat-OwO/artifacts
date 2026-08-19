@@ -1,34 +1,29 @@
 import { defineRelations } from "drizzle-orm";
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-  index,
-  integer,
-} from "drizzle-orm/pg-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const user = pgTable("user", {
-  createdAt: timestamp("created_at").notNull(),
+export const user = sqliteTable("user", {
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").default(false).notNull(),
+  emailVerified: integer("email_verified", { mode: "boolean" })
+    .default(false)
+    .notNull(),
   id: text("id").primaryKey(),
   image: text("image"),
   name: text("name").notNull(),
-  updatedAt: timestamp("updated_at")
+  updatedAt: integer("updated_at", { mode: "timestamp" })
     .$onUpdate(() => new Date())
     .notNull(),
 });
 
-export const session = pgTable(
+export const session = sqliteTable(
   "session",
   {
-    createdAt: timestamp("created_at").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
     id: text("id").primaryKey(),
     ipAddress: text("ip_address"),
     token: text("token").notNull().unique(),
-    updatedAt: timestamp("updated_at")
+    updatedAt: integer("updated_at", { mode: "timestamp" })
       .$onUpdate(() => new Date())
       .notNull(),
     userAgent: text("user_agent"),
@@ -39,21 +34,25 @@ export const session = pgTable(
   (table) => [index("session_userId_idx").on(table.userId)]
 );
 
-export const account = pgTable(
+export const account = sqliteTable(
   "account",
   {
     accessToken: text("access_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    accessTokenExpiresAt: integer("access_token_expires_at", {
+      mode: "timestamp",
+    }),
     accountId: text("account_id").notNull(),
-    createdAt: timestamp("created_at").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     id: text("id").primaryKey(),
     idToken: text("id_token"),
     password: text("password"),
     providerId: text("provider_id").notNull(),
     refreshToken: text("refresh_token"),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    refreshTokenExpiresAt: integer("refresh_token_expires_at", {
+      mode: "timestamp",
+    }),
     scope: text("scope"),
-    updatedAt: timestamp("updated_at")
+    updatedAt: integer("updated_at", { mode: "timestamp" })
       .$onUpdate(() => new Date())
       .notNull(),
     userId: text("user_id")
@@ -63,14 +62,14 @@ export const account = pgTable(
   (table) => [index("account_userId_idx").on(table.userId)]
 );
 
-export const verification = pgTable(
+export const verification = sqliteTable(
   "verification",
   {
-    createdAt: timestamp("created_at").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
     id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
-    updatedAt: timestamp("updated_at")
+    updatedAt: integer("updated_at", { mode: "timestamp" })
       .$onUpdate(() => new Date())
       .notNull(),
     value: text("value").notNull(),
@@ -78,18 +77,12 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 );
 
-export const deviceCode = pgTable("device_code", {
+export const deviceCode = sqliteTable("device_code", {
   clientId: text("client_id"),
   deviceCode: text("device_code").notNull(),
-  expiresAt: timestamp("expires_at", {
-    precision: 6,
-    withTimezone: true,
-  }).notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   id: text("id").primaryKey(),
-  lastPolledAt: timestamp("last_polled_at", {
-    precision: 6,
-    withTimezone: true,
-  }),
+  lastPolledAt: integer("last_polled_at", { mode: "timestamp" }),
   pollingInterval: integer("polling_interval"),
   scope: text("scope"),
   status: text("status").notNull(),

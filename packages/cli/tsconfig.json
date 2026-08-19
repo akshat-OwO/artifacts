@@ -31,5 +31,11 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  // The CLI shares `Api` types with apps/web, whose server code references the
+  // `cloudflare:workers` module declared in wrangler's generated types.
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "../../apps/web/worker-configuration.d.ts"
+  ]
 }

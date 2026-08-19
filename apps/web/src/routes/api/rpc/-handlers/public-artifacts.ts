@@ -1,24 +1,17 @@
 import { and, eq } from "drizzle-orm";
-import * as PgDrizzle from "drizzle-orm/effect-postgres";
+import * as D1Drizzle from "drizzle-orm/effect-d1";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 
-import { PgClientLive } from "#/lib/db";
-import { artifact, DEFAULT_ARTIFACT_PREVIEW_KEY, user } from "#/lib/db/schemas";
+import { getDefaultArtifactPreviewUrl } from "#/lib/artifacts/preview";
+import { D1ClientLive } from "#/lib/db";
+import { artifact, user } from "#/lib/db/schemas";
 import { ArtifactNotFoundError } from "#/lib/errors/artifacts/artifact-not-found";
 import { PreviewError } from "#/lib/errors/artifacts/preview-error";
 import { Storage, StorageLive } from "#/lib/storage";
 
 import { Api } from "../-api";
-
-const DEFAULT_LOCAL_BASE_URL = "http://localhost:3000";
-
-const getPublicAssetUrl = (assetPath: string) =>
-  new URL(
-    assetPath,
-    process.env.VITE_BASE_URL ?? DEFAULT_LOCAL_BASE_URL
-  ).toString();
 
 export const PublicArtifactsApiHandler = HttpApiBuilder.group(
   Api,
@@ -27,8 +20,7 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
     handlers
       .handle("getPublicArtifactById", ({ params: { artifactId } }) =>
         Effect.gen(function* handler() {
-          const db = yield* PgDrizzle.makeWithDefaults();
-          const storage = yield* Storage;
+          const db = yield* D1Drizzle.makeWithDefaults({});
 
           const [artifactRow] = yield* db
             .select({
@@ -37,7 +29,6 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
               createdAt: artifact.createdAt,
               id: artifact.id,
               name: artifact.name,
-              previewKey: artifact.previewKey,
               updatedAt: artifact.updatedAt,
             })
             .from(artifact)
@@ -51,22 +42,17 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
             return yield* new ArtifactNotFoundError();
           }
 
-          const { previewKey, ...publicArtifact } = artifactRow;
-
-          const previewImageUrl =
-            previewKey === DEFAULT_ARTIFACT_PREVIEW_KEY
-              ? getPublicAssetUrl(DEFAULT_ARTIFACT_PREVIEW_KEY)
-              : yield* Effect.tryPromise({
-                  catch: () => new PreviewError(),
-                  try: () => storage.r2.url(previewKey),
-                });
-
-          return { ...publicArtifact, previewImageUrl };
-        }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
+          return {
+            ...artifactRow,
+            previewImageUrl: getDefaultArtifactPreviewUrl(
+              process.env.VITE_BASE_URL
+            ),
+          };
+        }).pipe(Effect.provide(D1ClientLive))
       )
       .handle("getPublicArtifactPreviewByKey", ({ params: { artifactKey } }) =>
         Effect.gen(function* handler() {
-          const db = yield* PgDrizzle.makeWithDefaults();
+          const db = yield* D1Drizzle.makeWithDefaults({});
           const storage = yield* Storage;
 
           const [artifactRow] = yield* db
@@ -90,6 +76,6 @@ export const PublicArtifactsApiHandler = HttpApiBuilder.group(
           });
 
           return previewUrl;
-        }).pipe(Effect.provide(Layer.mergeAll(StorageLive, PgClientLive)))
+        }).pipe(Effect.provide(Layer.mergeAll(StorageLive, D1ClientLive)))
       )
 );

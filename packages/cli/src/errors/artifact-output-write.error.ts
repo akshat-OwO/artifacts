@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-export class ArtifactOutputWriteError extends Schema.TaggedErrorClass<ArtifactOutputWriteError>()(
+export class ArtifactOutputWriteError extends Schema.TaggedError<ArtifactOutputWriteError>()(
   "ArtifactOutputWriteError",
   {
     cause: Schema.Unknown,

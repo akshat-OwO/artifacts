@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-export class InvalidFileTypeError extends Schema.TaggedErrorClass<InvalidFileTypeError>()(
+export class InvalidFileTypeError extends Schema.TaggedError<InvalidFileTypeError>()(
   "InvalidFileTypeError",
   {},
   { httpApiStatus: 400 }
