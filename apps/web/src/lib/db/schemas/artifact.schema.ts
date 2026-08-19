@@ -1,45 +1,39 @@
-import { defineRelations, sql } from "drizzle-orm";
-import {
-  boolean,
-  index,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { defineRelations } from "drizzle-orm";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { user } from "./auth.schema";
 
-const randomArtifactName = sql<string>`(
-  ARRAY[
-    'Amber Comet',
-    'Brave Badger',
-    'Copper Finch',
-    'Dancing Otter',
-    'Electric Orchid',
-    'Frosted Moon',
-    'Golden Sparrow',
-    'Hidden Lagoon'
-  ]
-)[1 + floor(random() * 8)::integer]`;
+const ARTIFACT_NAMES = [
+  "Amber Comet",
+  "Brave Badger",
+  "Copper Finch",
+  "Dancing Otter",
+  "Electric Orchid",
+  "Frosted Moon",
+  "Golden Sparrow",
+  "Hidden Lagoon",
+] as const;
 
-export const DEFAULT_ARTIFACT_PREVIEW_KEY = "preview/preview-fallback.png";
+const randomArtifactName = () =>
+  ARTIFACT_NAMES[Math.floor(Math.random() * ARTIFACT_NAMES.length)] as string;
 
-export const artifact = pgTable(
+export const artifact = sqliteTable(
   "artifact",
   {
     artifactKey: text("artifact_key").notNull().unique(),
     artifactSizeBytes: integer("artifact_size_bytes").default(0).notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    id: uuid("id").defaultRandom().primaryKey(),
-    isPublic: boolean("is_public").default(false).notNull(),
-    name: text("name").default(randomArtifactName).notNull(),
-    previewKey: text("preview_key")
-      .default(DEFAULT_ARTIFACT_PREVIEW_KEY)
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .$defaultFn(() => new Date())
       .notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
+    id: text("id")
+      .$defaultFn(() => crypto.randomUUID())
+      .primaryKey(),
+    isPublic: integer("is_public", { mode: "boolean" })
+      .default(false)
+      .notNull(),
+    name: text("name").$defaultFn(randomArtifactName).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .$defaultFn(() => new Date())
       .$onUpdate(() => new Date())
       .notNull(),
     userId: text("user_id")

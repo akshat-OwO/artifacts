@@ -3,13 +3,13 @@ import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import type { ReactElement } from "react";
 
+import { DEFAULT_ARTIFACT_PREVIEW_PATH } from "#/lib/artifacts/preview";
 import { detectImageLuminance } from "#/lib/utils";
 
 export interface ArtifactCardProps {
   artifact: {
     id: string;
     name: string;
-    previewKey: string;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -40,7 +40,7 @@ export const ArtifactCard = ({ artifact }: ArtifactCardProps): ReactElement => {
         </span>
       </div>
       <img
-        src={artifact.previewKey}
+        src={DEFAULT_ARTIFACT_PREVIEW_PATH}
         alt={`${artifact.name} preview`}
         crossOrigin="anonymous"
         className="aspect-video h-full w-full rounded-md transition-all group-hover:scale-[1.03]"

@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-export class UsageLimitExceededError extends Schema.TaggedErrorClass<UsageLimitExceededError>()(
+export class UsageLimitExceededError extends Schema.TaggedError<UsageLimitExceededError>()(
   "UsageLimitExceededError",
   {
     currentBytes: Schema.Int,

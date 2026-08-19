@@ -1,18 +1,9 @@
-import { PgClient } from "@effect/sql-pg";
-import * as Redacted from "effect/Redacted";
-import { types } from "pg";
+import { D1Client } from "@effect/sql-d1";
+import { env } from "cloudflare:workers";
+import * as Layer from "effect/Layer";
 
-export const PgClientLive = PgClient.layer({
-  types: {
-    getTypeParser: (typeId, format) => {
-      // Return raw values for date/time types to let Drizzle handle parsing
-      if (
-        [1184, 1114, 1082, 1186, 1231, 1115, 1185, 1187, 1182].includes(typeId)
-      ) {
-        return (val: unknown) => val;
-      }
-      return types.getTypeParser(typeId, format);
-    },
-  },
-  url: Redacted.make(process.env.DATABASE_URL || ""),
-});
+// The binding is supplied directly from the Worker env rather than from
+// Config, so a ConfigError here is a deployment defect, not a request error.
+export const D1ClientLive = Layer.orDie(
+  D1Client.layer({ db: env.artifacts_db })
+);

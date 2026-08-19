@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-export class AuthDeviceCodeError extends Schema.TaggedErrorClass<AuthDeviceCodeError>()(
+export class AuthDeviceCodeError extends Schema.TaggedError<AuthDeviceCodeError>()(
   "AuthDeviceCodeError",
   {
     description: Schema.String,

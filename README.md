@@ -8,12 +8,13 @@ Upload, preview, and share self-contained HTML artifacts.
 
 ## Repository
 
-- `apps/web` — TanStack Start web application and API
+- `apps/web` — TanStack Start application and API deployed to Cloudflare Workers
 - `packages/cli` — command-line tools for uploading and sharing artifacts
-- `packages/scout` — isolated browser service used to render artifact previews
 
 The project is a Bun workspace managed with Turborepo. It uses TypeScript,
-React 19, Effect, PostgreSQL, and Cloudflare R2-compatible object storage.
+React 19, Effect, Cloudflare D1, and Cloudflare R2. Artifact previews use a
+shipped fallback image; the former Scout browser-rendering service has been
+removed.
 
 ## Development
 
@@ -25,6 +26,12 @@ bun run dev
 ```
 
 The web application runs at [http://localhost:3000](http://localhost:3000).
+
+Apply local D1 migrations when the schema changes:
+
+```sh
+bun run --cwd apps/web db:migrate:local
+```
 
 ## Checks
 
@@ -45,4 +52,13 @@ Build every workspace package with:
 
 ```sh
 bun run build
+```
+
+## Deploy
+
+The web workspace builds the Worker, applies remote D1 migrations, and deploys
+with Wrangler:
+
+```sh
+bun run --cwd apps/web deploy
 ```
