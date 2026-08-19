@@ -12,6 +12,7 @@ import path from "node:path";
 
 const MIGRATIONS_DIR = "src/lib/db/migrations";
 const DRIZZLE_TIMESTAMP_PREFIX = /^\d+_/u;
+const FLAT_MIGRATION_PREFIX = /^(?<sequence>\d+)_/u;
 
 const entries = await readdir(MIGRATIONS_DIR, { withFileTypes: true });
 
@@ -26,12 +27,30 @@ const existing = new Set(
     .map((entry) => entry.name)
 );
 
+const highestExistingSequence = Math.max(
+  0,
+  ...Array.from(existing, (filename) => {
+    const match = FLAT_MIGRATION_PREFIX.exec(filename);
+    return match?.groups?.sequence
+      ? Number.parseInt(match.groups.sequence, 10)
+      : 0;
+  })
+);
+
+const existingNames = new Set(
+  Array.from(existing, (filename) =>
+    filename.replace(FLAT_MIGRATION_PREFIX, "").replace(/\.sql$/u, "")
+  )
+);
+
 const pending = folders
+  .filter(
+    (folder) => !existingNames.has(folder.replace(DRIZZLE_TIMESTAMP_PREFIX, ""))
+  )
   .map((folder, index) => ({
     folder,
-    target: `${String(index + 1).padStart(4, "0")}_${folder.replace(DRIZZLE_TIMESTAMP_PREFIX, "")}.sql`,
-  }))
-  .filter(({ target }) => !existing.has(target));
+    target: `${String(highestExistingSequence + index + 1).padStart(4, "0")}_${folder.replace(DRIZZLE_TIMESTAMP_PREFIX, "")}.sql`,
+  }));
 
 await Promise.all(
   pending.map(async ({ folder, target }) => {
