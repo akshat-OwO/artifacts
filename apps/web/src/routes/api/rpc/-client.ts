@@ -27,11 +27,7 @@ const getRequestBaseUrl = createIsomorphicFn()
   )
   .server(
     (): Promise<string> =>
-      Promise.resolve(
-        process.env.SERVER_BASE_URL ??
-          process.env.VITE_BASE_URL ??
-          DEFAULT_LOCAL_BASE_URL
-      )
+      Promise.resolve(process.env.VITE_BASE_URL ?? DEFAULT_LOCAL_BASE_URL)
   );
 
 export class ApiClient extends Context.Service<ApiClient>()(

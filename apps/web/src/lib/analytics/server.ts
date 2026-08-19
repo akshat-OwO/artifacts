@@ -18,11 +18,7 @@ const getPostHogHost = () =>
   process.env.VITE_POSTHOG_HOST ?? DEFAULT_POSTHOG_HOST;
 
 export const getAnalyticsBaseUrl = () =>
-  (
-    process.env.VITE_BASE_URL ??
-    process.env.SERVER_BASE_URL ??
-    "http://localhost:3000"
-  ).replace(/\/+$/u, "");
+  (process.env.VITE_BASE_URL ?? "http://localhost:3000").replace(/\/+$/u, "");
 
 export const getAnalyticsUrl = (path: string) => {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;

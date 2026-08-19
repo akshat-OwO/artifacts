@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "artifacts-web",
   "compatibility_date": "2025-09-02",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "main": "@tanstack/react-start/server-entry",
   "d1_databases": [
     {
@@ -19,4 +19,18 @@
       "remote": true,
     },
   ],
+  "routes": [
+    {
+      "pattern": "artifacts.4kshat.dev",
+      "zone_name": "4kshat.dev",
+      "custom_domain": true,
+      "enabled": true,
+      "previews_enabled": false,
+    },
+  ],
+  "vars": {
+    "BETTER_AUTH_URL": "https://artifacts.4kshat.dev",
+    "VITE_BASE_URL": "https://artifacts.4kshat.dev",
+  },
+  "workers_dev": true,
 }
