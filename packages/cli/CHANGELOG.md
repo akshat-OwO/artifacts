@@ -1,5 +1,11 @@
 # @akshatowo/artifacts
 
+## 0.0.9
+
+### Patch Changes
+
+- 7bd231e: update effect dependencies
+
 ## 0.0.8
 
 ### Patch Changes
