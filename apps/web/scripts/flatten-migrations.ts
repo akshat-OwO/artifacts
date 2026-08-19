@@ -18,8 +18,11 @@ const entries = await readdir(MIGRATIONS_DIR, { withFileTypes: true });
 
 const folders = entries
   .filter((entry) => entry.isDirectory())
-  .map((entry) => entry.name)
-  .toSorted();
+  .map((entry) => entry.name);
+
+// `folders` is a new array, so sorting it in place cannot mutate shared input.
+// oxlint-disable-next-line unicorn/no-array-sort
+folders.sort();
 
 const existing = new Set(
   entries
@@ -37,19 +40,34 @@ const highestExistingSequence = Math.max(
   })
 );
 
-const existingNames = new Set(
-  Array.from(existing, (filename) =>
-    filename.replace(FLAT_MIGRATION_PREFIX, "").replace(/\.sql$/u, "")
-  )
+const existingSourceIds = Array.from(existing, (filename) =>
+  filename.replace(FLAT_MIGRATION_PREFIX, "").replace(/\.sql$/u, "")
 );
+const flattenedFolders = new Set<string>();
+
+for (const sourceId of existingSourceIds) {
+  if (folders.includes(sourceId)) {
+    flattenedFolders.add(sourceId);
+    continue;
+  }
+
+  // Older flattened filenames omitted the Drizzle timestamp. Match each
+  // legacy filename to at most one folder so repeated migration names survive.
+  const legacyFolder = folders.find(
+    (folder) =>
+      !flattenedFolders.has(folder) &&
+      folder.replace(DRIZZLE_TIMESTAMP_PREFIX, "") === sourceId
+  );
+  if (legacyFolder) {
+    flattenedFolders.add(legacyFolder);
+  }
+}
 
 const pending = folders
-  .filter(
-    (folder) => !existingNames.has(folder.replace(DRIZZLE_TIMESTAMP_PREFIX, ""))
-  )
+  .filter((folder) => !flattenedFolders.has(folder))
   .map((folder, index) => ({
     folder,
-    target: `${String(highestExistingSequence + index + 1).padStart(4, "0")}_${folder.replace(DRIZZLE_TIMESTAMP_PREFIX, "")}.sql`,
+    target: `${String(highestExistingSequence + index + 1).padStart(4, "0")}_${folder}.sql`,
   }));
 
 await Promise.all(
